@@ -184,3 +184,29 @@ export default function LoginPage() {
         </div>
     );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// DATABASE_URL="mongodb://localhost:27017/brdp_sis"
+
+// # JWT Secrets
+// JWT_ACCESS_SECRET="MZvCCdDy6a50KkyFtJ1-E0MWVIVEK9pQ9W-cExpEXMW64sRqKme6B-6klL60xV"
+// JWT_REFRESH_SECRET="VOtiwaripmI1lgAzTju5yvivekY046D6mnathS75oe974d0GcabKOhfVCwrdqAvU"
+// JWT_ACCESS_EXPIRY="15m"
+// JWT_REFRESH_EXPIRY="7d"
+
+// # App
+// NEXT_PUBLIC_APP_NAME="BRDP Student Information System"
+// NEXT_PUBLIC_APP_URL="http://localhost:3000"
+// NODE_ENV="development"
