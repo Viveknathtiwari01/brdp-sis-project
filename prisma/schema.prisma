@@ -1,0 +1,296 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum SystemRole {
+  SYSTEM_ADMIN
+  ADMIN
+  STUDENT
+}
+
+enum FeeStatus {
+  PENDING
+  PARTIAL
+  PAID
+}
+
+enum PaymentMode {
+  CASH
+  UPI
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  PAYMENT
+  RECEIPT_GENERATED
+}
+
+// ─────────────────────────────────────────────
+// USER & AUTH
+// ─────────────────────────────────────────────
+
+model User {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  email         String     @unique
+  password      String
+  name          String
+  role          SystemRole @default(STUDENT)
+  isActive      Boolean    @default(true)
+  isDeleted     Boolean    @default(false)
+  refreshToken  String?
+  lastLoginAt   DateTime?
+  loginAttempts Int        @default(0)
+  lockedUntil   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relations
+  student       Student?
+  permissions   AdminPermission[]
+  auditLogs     AuditLog[]
+
+  @@index([role])
+  @@index([isActive, isDeleted])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// PERMISSION SYSTEM
+// ─────────────────────────────────────────────
+
+model Permission {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  code        String   @unique
+  name        String
+  module      String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  adminPermissions AdminPermission[]
+
+  @@index([module])
+  @@map("permissions")
+}
+
+model AdminPermission {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  permissionId String   @db.ObjectId
+  grantedBy    String   @db.ObjectId
+  grantedAt    DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@index([userId])
+  @@map("admin_permissions")
+}
+
+// ─────────────────────────────────────────────
+// COURSE & SESSION
+// ─────────────────────────────────────────────
+
+model Course {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  code           String   @unique
+  description    String?
+  duration       Int      // in years
+  totalSemesters Int
+  isActive       Boolean  @default(true)
+  isDeleted      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  feeStructures  CourseFeeStructure[]
+  students       Student[]
+
+  @@index([isActive, isDeleted])
+  @@map("courses")
+}
+
+model Session {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   // e.g., "2024-2025"
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(true)
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  feeStructures CourseFeeStructure[]
+  students      Student[]
+
+  @@index([isActive, isDeleted])
+  @@map("sessions")
+}
+
+// ─────────────────────────────────────────────
+// FEE STRUCTURE (Normalized)
+// ─────────────────────────────────────────────
+
+model CourseFeeStructure {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  courseId       String   @db.ObjectId
+  sessionId      String   @db.ObjectId
+  semester       Int
+  totalAmount    Float
+  dueDate        DateTime
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, sessionId, semester])
+  @@index([courseId, sessionId])
+  @@map("course_fee_structures")
+}
+
+// ─────────────────────────────────────────────
+// STUDENT
+// ─────────────────────────────────────────────
+
+model Student {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String   @unique @db.ObjectId
+  courseId          String   @db.ObjectId
+  sessionId        String   @db.ObjectId
+
+  // Personal Details
+  firstName        String
+  lastName         String
+  fatherName       String
+  motherName       String
+  dateOfBirth      DateTime
+  gender           String
+  phone            String
+  address          String
+  city             String
+  state            String
+  pincode          String
+  photo            String?
+
+  // Educational Details
+  tenthBoard       String
+  tenthYear        Int
+  tenthPercentage  Float
+  twelfthBoard     String
+  twelfthYear      Int
+  twelfthPercentage Float
+  twelfthStream    String
+
+  // Academic Details
+  rollNo           String?
+  registrationNo   String   @unique
+  currentSemester  Int      @default(1)
+  admissionDate    DateTime @default(now())
+
+  isActive         Boolean  @default(true)
+  isDeleted        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course      @relation(fields: [courseId], references: [id])
+  session   Session     @relation(fields: [sessionId], references: [id])
+  feeLedger FeeLedger[]
+  payments  Payment[]
+
+  @@index([courseId, sessionId])
+  @@index([isActive, isDeleted])
+  @@map("students")
+}
+
+// ─────────────────────────────────────────────
+// FEE LEDGER
+// ─────────────────────────────────────────────
+
+model FeeLedger {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  studentId   String    @db.ObjectId
+  semester    Int
+  totalAmount Float
+  paidAmount  Float     @default(0)
+  dueDate     DateTime
+  status      FeeStatus @default(PENDING)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  student  Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@unique([studentId, semester])
+  @@index([studentId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("fee_ledgers")
+}
+
+// ─────────────────────────────────────────────
+// PAYMENT
+// ─────────────────────────────────────────────
+
+model Payment {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  studentId     String      @db.ObjectId
+  feeLedgerId   String      @db.ObjectId
+  amount        Float
+  paymentMode   PaymentMode
+  transactionId String?
+  receiptNumber String      @unique
+  receiptPath   String?
+  remarks       String?
+  paidAt        DateTime    @default(now())
+  createdBy     String      @db.ObjectId
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  feeLedger FeeLedger @relation(fields: [feeLedgerId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([feeLedgerId])
+  @@index([paidAt])
+  @@map("payments")
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String      @db.ObjectId
+  action     AuditAction
+  module     String
+  details    String?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([module])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

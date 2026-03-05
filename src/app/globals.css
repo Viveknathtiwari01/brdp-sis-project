@@ -1,26 +1,146 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Tell Tailwind v4 to use class-based dark mode (for next-themes) */
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-primary: #1e3a5f;
+  --color-primary-foreground: #ffffff;
+  --color-accent: #1e3a5f;
+  --color-accent-foreground: #ffffff;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 100%;
+    /* White bg for light mode */
+    --foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --primary: 221.2 83.2% 53.3%; /* blue-600 */
+    --primary-foreground: 210 40% 98%; /* slate-50 */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --accent: 215 52% 25%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 215 52% 25%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Set dark mode background to a shade of the sidebar (#1e3a5f) */
+    --background: 215 52% 8%;
+    /* Very deep navy shade */
+    --foreground: 210 40% 98%;
+    --muted: 215 52% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --popover: 215 52% 8%;
+    --popover-foreground: 210 40% 98%;
+    --card: 215 52% 10%;
+    --card-foreground: 210 40% 98%;
+    --border: 215 52% 18%;
+    --input: 215 52% 18%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 215 52% 25%;
+    --secondary: 215 52% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --accent: 215 52% 25%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 84.2% 60.2%;
+    --ring: 215 52% 25%;
+  }
+
+  * {
+    border-color: theme("colors.slate.200");
+  }
+
+  .dark * {
+    border-color: theme("colors.slate.800");
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900;
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .dark body {
+    background-color: #0f1d2f;
+    /* Deep navy background aligned with sidebar */
+    color: #f1f5f9;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .dark .glass {
+    background: rgba(15, 29, 47, 0.7);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #1e3a5f;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
