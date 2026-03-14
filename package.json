@@ -11,7 +11,8 @@
     "db:seed": "npx tsx prisma/seed.ts",
     "db:studio": "npx prisma studio",
     "db:generate": "npx prisma generate",
-    "db:reset": "npx prisma db push --force-reset && npx tsx prisma/seed.ts"
+    "db:reset": "npx prisma db push --force-reset && npx tsx prisma/seed.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
