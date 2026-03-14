@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useApi } from "@/hooks/use-api";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -188,12 +189,11 @@ export default function FeesPage() {
     return (
         <DashboardShell>
             <div className="space-y-6 animate-fade-in">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Fee Management</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                        View & manage semester-wise fee ledger and payments
-                    </p>
-                </div>
+                <PageHeader
+                    title="Fee Management"
+                    // description="View & manage semester-wise fee ledger and payments"
+                    // icon={<IndianRupee className="h-6 w-6 text-blue-800" />}
+                />
 
                 {/* Student Selector (Admin/System Admin) */}
                 {user?.role !== "STUDENT" && (

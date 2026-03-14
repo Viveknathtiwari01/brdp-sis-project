@@ -42,7 +42,7 @@ export const POST = withPermission("course:create")(async (req, user) => {
                     courseId: validated.courseId,
                     sessionId: validated.sessionId,
                     semester: s.semester,
-                    totalAmount: s.totalAmount,
+                    totalAmount: Math.round(s.totalAmount),
                     dueDate: new Date(s.dueDate),
                     description: s.description || null,
                 })),

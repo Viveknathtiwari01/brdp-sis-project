@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useApi } from "@/hooks/use-api";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,13 +55,10 @@ export default function SettingsPage() {
     return (
         <DashboardShell>
             <div className="space-y-6 animate-fade-in">
-                {/* Header */}
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Settings</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Manage your account preferences and system configuration
-                    </p>
-                </div>
+                <PageHeader
+                    title="Settings"
+                    // description="Manage your account preferences and system configuration"
+                />
 
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Sidebar Tabs */}
@@ -148,7 +146,7 @@ function ProfileSettings({ user, apiFetch }: { user: any; apiFetch: any }) {
                                 <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 border-none">
                                     {user?.role?.replace("_", " ")}
                                 </Badge>
-                                <span className="text-sm text-slate-600 dark:text-slate-400">{user?.email}</span>
+                                {/* <span className="text-sm text-slate-600 dark:text-slate-400">{user?.email}</span> */}
                             </div>
                         </div>
                     </div>
@@ -162,7 +160,7 @@ function ProfileSettings({ user, apiFetch }: { user: any; apiFetch: any }) {
                         <User className="h-4 w-4 text-indigo-500" />
                         Personal Information
                     </CardTitle>
-                    <CardDescription>Update your personal details</CardDescription>
+                    {/* <CardDescription>Update your personal details</CardDescription> */}
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -184,7 +182,7 @@ function ProfileSettings({ user, apiFetch }: { user: any; apiFetch: any }) {
                                     className="pl-10 opacity-60 cursor-not-allowed"
                                 />
                             </div>
-                            <p className="text-xs text-slate-400">Email cannot be changed</p>
+                            {/* <p className="text-xs text-slate-400">Email cannot be changed</p> */}
                         </div>
                         <div className="space-y-1.5">
                             <Label>Role</Label>

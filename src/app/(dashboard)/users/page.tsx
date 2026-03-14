@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useApi } from "@/hooks/use-api";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,18 +117,17 @@ export default function UsersPage() {
     return (
         <DashboardShell>
             <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">User Management</h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
-                            Create admins and manage permissions
-                        </p>
-                    </div>
-                    <Button onClick={() => setShowCreate(true)} className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Create User
-                    </Button>
-                </div>
+                <PageHeader
+                    title="User Management"
+                    // description="Create admins and manage permissions"
+                    // icon={<Users className="h-6 w-6 text-blue-800" />}
+                    actions={
+                        <Button onClick={() => setShowCreate(true)} className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Create User
+                        </Button>
+                    }
+                />
 
                 <Card className="shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">

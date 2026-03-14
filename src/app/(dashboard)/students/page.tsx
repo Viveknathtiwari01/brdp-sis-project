@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useApi } from "@/hooks/use-api";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -143,21 +144,19 @@ export default function StudentsPage() {
     return (
         <DashboardShell>
             <div className="space-y-6 animate-fade-in">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Students</h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
-                            Manage student registrations and profiles
-                        </p>
-                    </div>
-                    {hasPermission("student:create") && (
-                        <Button onClick={() => setShowRegister(true)} className="gap-2">
-                            <Plus className="h-4 w-4" />
-                            Register Student
-                        </Button>
-                    )}
-                </div>
+                <PageHeader
+                    title="Students"
+                    // description="Manage student registrations and profiles"
+                    // icon={<GraduationCap className="h-6 w-6 text-blue-800" />}
+                    actions={
+                        hasPermission("student:create") ? (
+                            <Button onClick={() => setShowRegister(true)} className="gap-2">
+                                <Plus className="h-4 w-4" />
+                                Register Student
+                            </Button>
+                        ) : null
+                    }
+                />
 
                 {/* Search */}
                 <Card className="shadow-sm">

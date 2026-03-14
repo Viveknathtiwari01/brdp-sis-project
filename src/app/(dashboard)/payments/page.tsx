@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useApi } from "@/hooks/use-api";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,12 +64,11 @@ export default function PaymentsPage() {
     return (
         <DashboardShell>
             <div className="space-y-6 animate-fade-in">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Payment History</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                        All payment transactions and receipts
-                    </p>
-                </div>
+                <PageHeader
+                    title="Payment History"
+                    // description="All payment transactions and receipts"
+                    // icon={<Receipt className="h-6 w-6 text-blue-800" />}
+                />
 
                 <Card className="shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">

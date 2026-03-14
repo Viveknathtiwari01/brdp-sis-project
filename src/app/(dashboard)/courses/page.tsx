@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useApi } from "@/hooks/use-api";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,18 +82,19 @@ export default function CoursesPage() {
     return (
         <DashboardShell>
             <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Courses</h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Manage academic courses</p>
-                    </div>
-                    {hasPermission("course:create") && (
-                        <Button onClick={() => setShowCreate(true)} className="gap-2">
-                            <Plus className="h-4 w-4" />
-                            Add Course
-                        </Button>
-                    )}
-                </div>
+                <PageHeader
+                    title="Courses"
+                    // description="Manage academic courses"
+                    // icon={<BookOpen className="h-6 w-6 text-blue-800" />}
+                    actions={
+                        hasPermission("course:create") ? (
+                            <Button onClick={() => setShowCreate(true)} className="gap-2">
+                                <Plus className="h-4 w-4" />
+                                Add Course
+                            </Button>
+                        ) : null
+                    }
+                />
 
                 {loading ? (
                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

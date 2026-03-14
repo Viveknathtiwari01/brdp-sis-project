@@ -28,26 +28,26 @@ export function Sidebar() {
     return (
         <aside
             className={cn(
-                "fixed left-0 top-0 z-40 h-screen bg-[#1e3a5f] transition-all duration-300 ease-in-out flex flex-col",
+                "fixed left-0 top-0 z-40 h-screen bg-[#000080] transition-all duration-300 ease-in-out flex flex-col",
                 collapsed ? "w-[70px]" : "w-[260px]"
             )}
         >
             {/* Logo */}
-            <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
+            <div className="flex h-20 items-center justify-between border-b border-white/10 px-4">
                 <Link href="/dashboard" className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white overflow-hidden shrink-0 shadow-inner">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white overflow-hidden shrink-0 shadow-inner">
                         <Image
                             src="/logo.png"
                             alt="College Logo"
-                            width={28}
-                            height={28}
+                            width={40}
+                            height={40}
                             className="object-contain"
                         />
                     </div>
                     {!collapsed && (
                         <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-bold text-white tracking-wide truncate">BRDP Mahavidyalaya</span>
-                            <span className="text-[9px] font-medium text-slate-300">Student Portal</span>
+                            <span className="text-sm font-extrabold text-white tracking-wide truncate">BRDP Mahavidyalaya</span>
+                            <span className="text-[11px] font-semibold text-slate-200">Student Portal</span>
                         </div>
                     )}
                 </Link>

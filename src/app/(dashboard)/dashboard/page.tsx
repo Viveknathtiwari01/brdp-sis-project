@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useApi } from "@/hooks/use-api";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -108,21 +109,17 @@ export default function DashboardPage() {
     return (
         <DashboardShell>
             <div className="space-y-8 animate-fade-in">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                            Dashboard Overview
-                        </h1>
-                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                            Welcome back, {user?.name}. Here is what's happening today.
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
-                        <Calendar className="h-4 w-4 text-indigo-600" />
-                        {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </div>
-                </div>
+                <PageHeader
+                    title="Dashboard Overview"
+                    // description={`Welcome back, ${user?.name || ""}. Here is what's happening today.`}
+                    // icon={<BarChart3 className="h-6 w-6 text-blue-800" />}
+                    actions={
+                        <div className="flex items-center gap-2 text-sm font-medium text-white dark:text-slate-400 bg-blue-800 dark:bg-slate-900 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm ">
+                            <Calendar className="h-4 w-4 text-white" />
+                            {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                        </div>
+                    }
+                />
 
                 {/* Stats Grid */}
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
