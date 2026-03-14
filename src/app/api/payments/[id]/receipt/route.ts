@@ -54,7 +54,7 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const paidAt = new Date(payment.paidAt);
         const dueDate = new Date(payment.feeLedger.dueDate);
 
-        const instituteName = "Bhupram Dharmeshwar Prasad Mahavidyalaya";
+        const instituteName = "Sri Bhupram Dharmeshwar Prasad Mahavidyalaya";
         const instituteAddress = [
             "Village Mohiuddinpur Sahroi, Post: Sitapur,",
             "Block: Ailiya, District: Sitapur, Uttar Pradesh - 261001",
@@ -115,12 +115,12 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         doc.setFontSize(10.5);
         doc.setTextColor(...colors.blue);
         instituteAddress.forEach((line, i) => {
-            doc.text(line, pageWidth / 2, headerY + 50 + i * 14, { align: "center" });
+            doc.text(line, pageWidth / 2, headerY + 40 + i * 14, { align: "center" });
         });
 
         doc.setDrawColor(...colors.grid);
         doc.setLineWidth(1);
-        const headerDividerY = headerY + 50 + instituteAddress.length * 14 + 10;
+        const headerDividerY = headerY + 40 + instituteAddress.length * 14 + 10;
         doc.line(contentLeft, headerDividerY, pageWidth - contentRight, headerDividerY);
 
         const sectionTitle = (title: string, y: number) => {
@@ -269,7 +269,7 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         doc.setTextColor(...colors.slate600);
-        doc.text("Scan to Apply", qrX + qrSize / 2, footerY + qrSize + 12, { align: "center" });
+        // doc.text("Scan to Apply", qrX + qrSize / 2, footerY + qrSize + 12, { align: "center" });
 
         const noteY = Math.min(afterSummaryY + 28, footerY - footerGap - 52);
         doc.setDrawColor(...colors.grid);
