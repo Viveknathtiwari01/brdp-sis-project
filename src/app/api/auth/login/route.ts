@@ -8,16 +8,21 @@ export async function POST(req: NextRequest) {
         const validated = loginSchema.parse(body);
         const result = await AuthService.login(validated.email, validated.password);
 
+        const { refreshToken, ...safeResult } = result;
+
+        const isProd = process.env.NODE_ENV === "production";
+        const refreshCookieName = isProd ? "__Host-refreshToken" : "refreshToken";
+
         const response = NextResponse.json(
-            { success: true, data: result },
+            { success: true, data: safeResult },
             { status: 200 }
         );
 
         // Set refresh token as httpOnly cookie
-        response.cookies.set("refreshToken", result.refreshToken, {
+        response.cookies.set(refreshCookieName, refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            secure: isProd,
+            sameSite: "strict",
             maxAge: 7 * 24 * 60 * 60, // 7 days
             path: "/",
         });

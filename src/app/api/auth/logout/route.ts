@@ -14,6 +14,9 @@ export async function POST(req: NextRequest) {
             { status: 200 }
         );
 
+        const isProd = process.env.NODE_ENV === "production";
+        const refreshCookieName = isProd ? "__Host-refreshToken" : "refreshToken";
+        response.cookies.delete(refreshCookieName);
         response.cookies.delete("refreshToken");
         return response;
     } catch {

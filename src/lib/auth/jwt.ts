@@ -8,12 +8,19 @@ export interface TokenPayload extends JWTPayload {
     permissions?: string[];
 }
 
-const ACCESS_SECRET = new TextEncoder().encode(
-    process.env.JWT_ACCESS_SECRET || "fallback_access_secret"
-);
-const REFRESH_SECRET = new TextEncoder().encode(
-    process.env.JWT_REFRESH_SECRET || "fallback_refresh_secret"
-);
+const accessSecretValue = process.env.JWT_ACCESS_SECRET;
+const refreshSecretValue = process.env.JWT_REFRESH_SECRET;
+
+if (!accessSecretValue || accessSecretValue.length < 32) {
+    throw new Error("JWT_ACCESS_SECRET is missing or too short. Set a strong secret (>= 32 chars). ");
+}
+
+if (!refreshSecretValue || refreshSecretValue.length < 32) {
+    throw new Error("JWT_REFRESH_SECRET is missing or too short. Set a strong secret (>= 32 chars). ");
+}
+
+const ACCESS_SECRET = new TextEncoder().encode(accessSecretValue);
+const REFRESH_SECRET = new TextEncoder().encode(refreshSecretValue);
 
 export async function generateAccessToken(payload: Omit<TokenPayload, "iat" | "exp">): Promise<string> {
     return new SignJWT({ ...payload })
