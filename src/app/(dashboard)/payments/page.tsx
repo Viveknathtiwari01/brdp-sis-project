@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useApi } from "@/hooks/use-api";
+import { useAuth } from "@/hooks/use-auth";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { Receipt, ChevronLeft, ChevronRight } from "lucide-react";
+import { Receipt, ChevronLeft, ChevronRight, Download } from "lucide-react";
 
 interface PaymentData {
     id: string;
@@ -34,10 +35,13 @@ interface PaymentData {
 
 export default function PaymentsPage() {
     const { apiFetch } = useApi();
+    const { user, accessToken } = useAuth();
     const [payments, setPayments] = useState<PaymentData[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [downloadingId, setDownloadingId] = useState<string | null>(null);
+    const pageSize = 15;
 
     const fetchPayments = useCallback(async () => {
         try {
@@ -45,7 +49,7 @@ export default function PaymentsPage() {
             const res = await apiFetch<{
                 success: boolean;
                 data: { payments: PaymentData[]; pagination: { totalPages: number } };
-            }>(`/api/payments?page=${page}&limit=15`);
+            }>(`/api/payments?page=${page}&limit=${pageSize}`);
             if (res.success) {
                 setPayments(res.data.payments);
                 setTotalPages(res.data.pagination.totalPages);
@@ -55,7 +59,50 @@ export default function PaymentsPage() {
         } finally {
             setLoading(false);
         }
-    }, [apiFetch, page]);
+    }, [apiFetch, page, pageSize]);
+
+    const canDownload = user?.role === "SYSTEM_ADMIN" || user?.role === "ADMIN";
+
+    const handleDownload = async (paymentId: string) => {
+        try {
+            if (!accessToken) {
+                toast.error("Session expired. Please login again.");
+                return;
+            }
+
+            setDownloadingId(paymentId);
+            const res = await fetch(`/api/payments/${paymentId}/receipt`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                credentials: "include",
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => null);
+                throw new Error(data?.message || "Failed to download receipt");
+            }
+
+            const blob = await res.blob();
+            const contentDisposition = res.headers.get("content-disposition") || "";
+            const fileNameMatch = contentDisposition.match(/filename="?([^\"]+)"?/i);
+            const rawName = fileNameMatch?.[1] || "receipt.pdf";
+            const fileName = rawName.toLowerCase().endsWith(".pdf") ? rawName : `${rawName}.pdf`;
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to download receipt");
+        } finally {
+            setDownloadingId(null);
+        }
+    };
 
     useEffect(() => {
         fetchPayments();
@@ -74,30 +121,31 @@ export default function PaymentsPage() {
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Receipt No</th>
+                                <tr className="border-b border-slate-200 bg-slate-100/80 dark:border-slate-700 dark:bg-slate-800/70">
+                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">S. No.</th>
                                     <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Student</th>
                                     <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Semester</th>
                                     <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Amount</th>
                                     <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Mode</th>
                                     <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Fee Status</th>
                                     <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Date</th>
+                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Download</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                                 {loading ? (
                                     [...Array(5)].map((_, i) => (
                                         <tr key={i}>
-                                            <td colSpan={7} className="px-4 py-3">
+                                            <td colSpan={9} className="px-4 py-3">
                                                 <Skeleton className="h-8 w-full" />
                                             </td>
                                         </tr>
                                     ))
                                 ) : payments.length > 0 ? (
-                                    payments.map((payment) => (
+                                    payments.map((payment, idx) => (
                                         <tr key={payment.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                            <td className="px-4 py-3 font-mono text-xs text-indigo-600 dark:text-indigo-400 font-medium">
-                                                {payment.receiptNumber}
+                                            <td className="px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400">
+                                                {(page - 1) * pageSize + idx + 1}
                                             </td>
                                             <td className="px-4 py-3">
                                                 <p className="font-medium text-slate-700 dark:text-slate-200">
@@ -129,14 +177,32 @@ export default function PaymentsPage() {
                                                     {payment.feeLedger.status}
                                                 </Badge>
                                             </td>
-                                            <td className="px-4 py-3 text-xs text-slate-500">
-                                                {formatDateTime(payment.paidAt)}
+                                            <td className="px-4 py-3">
+                                                <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800/40">
+                                                    {formatDateTime(payment.paidAt)}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                {canDownload ? (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="gap-2 border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/40 dark:hover:bg-blue-900/30 dark:text-blue-200"
+                                                        onClick={() => handleDownload(payment.id)}
+                                                        isLoading={downloadingId === payment.id}
+                                                    >
+                                                        <Download className="h-4 w-4" />
+                                                        Download
+                                                    </Button>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400">—</span>
+                                                )}
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={7} className="px-4 py-12 text-center">
+                                        <td colSpan={9} className="px-4 py-12 text-center">
                                             <Receipt className="mx-auto h-8 w-8 text-slate-300 mb-2" />
                                             <p className="text-sm text-slate-500">No payments recorded yet</p>
                                         </td>

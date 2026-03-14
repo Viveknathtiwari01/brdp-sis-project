@@ -14,7 +14,7 @@ const DialogOverlay = React.forwardRef<
     <DialogPrimitive.Overlay
         ref={ref}
         className={cn(
-            "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm",
+            "fixed inset-0 z-50 bg-black/30 backdrop-blur-sm",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             className
@@ -33,8 +33,8 @@ const DialogContent = React.forwardRef<
         <DialogPrimitive.Content
             ref={ref}
             className={cn(
-                "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4",
-                "rounded-xl border border-slate-200 bg-white p-6 shadow-2xl duration-200",
+                "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-6",
+                " border border-slate-200 bg-white p-7 shadow-2xl duration-200",
                 "dark:border-slate-700 dark:bg-slate-800",
                 "data-[state=open]:animate-in data-[state=closed]:animate-out",
                 "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -56,7 +56,14 @@ const DialogContent = React.forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />
+    <div
+        className={cn(
+            "-mx-7 -mt-7 flex flex-col gap-1.5 border-b border-slate-200 bg-blue-100 px-7 pb-4 pt-6 text-center sm:text-left",
+            "dark:border-slate-700/60 dark:bg-slate-900/30",
+            className
+        )}
+        {...props}
+    />
 );
 
 const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -67,7 +74,11 @@ const DialogTitle = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Title>,
     React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
-    <DialogPrimitive.Title ref={ref} className={cn("text-lg font-semibold text-slate-900 dark:text-slate-100", className)} {...props} />
+    <DialogPrimitive.Title
+        ref={ref}
+        className={cn("text-lg font-bold leading-none text-slate-900 dark:text-slate-100", className)}
+        {...props}
+    />
 ));
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 

@@ -151,30 +151,30 @@ export default function CoursesPage() {
                             <DialogTitle>Add Course</DialogTitle>
                             <DialogDescription>Create a new academic course.</DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleSubmit(onCreate)} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
+                        <form onSubmit={handleSubmit(onCreate)} className="space-y-5">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div className="space-y-1.5">
                                     <Label required>Course Name</Label>
                                     <Input {...register("name")} placeholder="Bachelor of Computer Applications" error={errors.name?.message as string} />
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                     <Label required>Course Code</Label>
                                     <Input {...register("code")} placeholder="BCA" error={errors.code?.message as string} />
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                     <Label required>Duration (Years)</Label>
                                     <Input {...register("duration")} type="number" error={errors.duration?.message as string} />
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                     <Label required>Total Semesters</Label>
                                     <Input {...register("totalSemesters")} type="number" error={errors.totalSemesters?.message as string} />
                                 </div>
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-1.5">
                                 <Label>Description</Label>
                                 <Input {...register("description")} placeholder="Optional description" />
                             </div>
-                            <div className="flex justify-end gap-3 pt-2">
+                            <div className="flex justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-700/60">
                                 <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
                                 <Button type="submit" isLoading={submitting}>Create Course</Button>
                             </div>

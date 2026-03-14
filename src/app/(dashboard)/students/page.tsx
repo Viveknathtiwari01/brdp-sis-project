@@ -24,6 +24,8 @@ import {
     GraduationCap,
     ChevronLeft,
     ChevronRight,
+    Eye,
+    EyeOff,
 } from "lucide-react";
 
 interface StudentData {
@@ -63,6 +65,7 @@ export default function StudentsPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [showRegister, setShowRegister] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const {
@@ -285,38 +288,63 @@ export default function StudentsPage() {
                         </DialogHeader>
                         <form onSubmit={handleSubmit(onRegister)} className="space-y-6">
                             {/* Personal Details */}
-                            <div>
+                            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
                                 <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Personal Details</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
+                                        <Label required>Registration Number</Label>
+                                        <Input {...register("registrationNo")} error={errors.registrationNo?.message} />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label required>Roll No</Label>
+                                        <Input {...register("rollNo")} error={errors.rollNo?.message} />
+                                    </div>
+
+                                    <div className="space-y-1.5">
                                         <Label required>First Name</Label>
                                         <Input {...register("firstName")} error={errors.firstName?.message} />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>Last Name</Label>
                                         <Input {...register("lastName")} error={errors.lastName?.message} />
                                     </div>
-                                    <div className="space-y-1">
-                                        <Label required>Email</Label>
-                                        <Input {...register("email")} type="email" error={errors.email?.message} />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label required>Password</Label>
-                                        <Input {...register("password")} type="password" error={errors.password?.message} />
-                                    </div>
-                                    <div className="space-y-1">
+
+                                    <div className="space-y-1.5">
                                         <Label required>Father&apos;s Name</Label>
                                         <Input {...register("fatherName")} error={errors.fatherName?.message} />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>Mother&apos;s Name</Label>
                                         <Input {...register("motherName")} error={errors.motherName?.message} />
                                     </div>
-                                    <div className="space-y-1">
+
+                                    <div className="space-y-1.5">
+                                        <Label required>Email</Label>
+                                        <Input {...register("email")} type="email" error={errors.email?.message} />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label required>Password</Label>
+                                        <div className="relative">
+                                            <Input
+                                                {...register("password")}
+                                                type={showPassword ? "text" : "password"}
+                                                error={errors.password?.message}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword((s) => !s)}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                            >
+                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
                                         <Label required>Date of Birth</Label>
                                         <Input {...register("dateOfBirth")} type="date" error={errors.dateOfBirth?.message} />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>Gender</Label>
                                         <Select onValueChange={(v) => setValue("gender", v as "Male" | "Female" | "Other")}>
                                             <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
@@ -328,58 +356,66 @@ export default function StudentsPage() {
                                         </Select>
                                         {errors.gender && <p className="text-xs text-red-500">{errors.gender.message as string}</p>}
                                     </div>
-                                    <div className="space-y-1">
+
+                                    <div className="space-y-1.5">
                                         <Label required>Phone</Label>
                                         <Input {...register("phone")} error={errors.phone?.message} />
                                     </div>
-                                    <div className="space-y-1">
-                                        <Label required>Pincode</Label>
-                                        <Input {...register("pincode")} error={errors.pincode?.message} />
-                                    </div>
-                                    <div className="space-y-1 md:col-span-2">
-                                        <Label required>Address</Label>
-                                        <Input {...register("address")} error={errors.address?.message} />
-                                    </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>City</Label>
                                         <Input {...register("city")} error={errors.city?.message} />
                                     </div>
-                                    <div className="space-y-1">
+
+                                    <div className="space-y-1.5">
                                         <Label required>State</Label>
                                         <Input {...register("state")} error={errors.state?.message} />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label required>Pincode</Label>
+                                        <Input {...register("pincode")} error={errors.pincode?.message} />
+                                    </div>
+
+                                    <div className="space-y-1.5 md:col-span-2">
+                                        <Label required>Address</Label>
+                                        <textarea
+                                            {...register("address")}
+                                            rows={2}
+                                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                        />
+                                        {errors.address && <p className="text-xs text-red-500">{errors.address.message as string}</p>}
                                     </div>
                                 </div>
                             </div>
 
                             {/* Educational Details */}
-                            <div>
+                            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
                                 <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Educational Details</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>10th Board</Label>
                                         <Input {...register("tenthBoard")} error={errors.tenthBoard?.message} />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>10th Year</Label>
                                         <Input {...register("tenthYear")} type="number" error={errors.tenthYear?.message} />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>10th Percentage</Label>
                                         <Input {...register("tenthPercentage")} type="number" step="0.01" error={errors.tenthPercentage?.message} />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>12th Board</Label>
                                         <Input {...register("twelfthBoard")} error={errors.twelfthBoard?.message} />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>12th Year</Label>
                                         <Input {...register("twelfthYear")} type="number" error={errors.twelfthYear?.message} />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>12th Percentage</Label>
                                         <Input {...register("twelfthPercentage")} type="number" step="0.01" error={errors.twelfthPercentage?.message} />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>12th Stream</Label>
                                         <Input {...register("twelfthStream")} error={errors.twelfthStream?.message} />
                                     </div>
@@ -387,10 +423,10 @@ export default function StudentsPage() {
                             </div>
 
                             {/* Academic Details */}
-                            <div>
+                            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
                                 <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Academic Details</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>Course</Label>
                                         <Select onValueChange={(v) => setValue("courseId", v)}>
                                             <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
@@ -402,7 +438,7 @@ export default function StudentsPage() {
                                         </Select>
                                         {errors.courseId && <p className="text-xs text-red-500">{errors.courseId.message as string}</p>}
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label required>Session</Label>
                                         <Select onValueChange={(v) => setValue("sessionId", v)}>
                                             <SelectTrigger><SelectValue placeholder="Select session" /></SelectTrigger>
@@ -414,22 +450,18 @@ export default function StudentsPage() {
                                         </Select>
                                         {errors.sessionId && <p className="text-xs text-red-500">{errors.sessionId.message as string}</p>}
                                     </div>
-                                    <div className="space-y-1">
-                                        <Label>Roll No (Optional)</Label>
-                                        <Input {...register("rollNo")} />
-                                    </div>
                                 </div>
                             </div>
 
                             {/* Initial Payment */}
-                            <div>
+                            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
                                 <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Initial Payment (Optional)</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label>Amount (₹)</Label>
                                         <Input {...register("initialPayment")} type="number" placeholder="0" />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label>Payment Mode</Label>
                                         <Select onValueChange={(v) => setValue("paymentMode", v as "CASH" | "UPI")}>
                                             <SelectTrigger><SelectValue placeholder="Select mode" /></SelectTrigger>
@@ -439,14 +471,14 @@ export default function StudentsPage() {
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <Label>Transaction ID</Label>
                                         <Input {...register("transactionId")} placeholder="For UPI payments" />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex justify-end gap-3 pt-4 border-t">
+                            <div className="flex justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-700/60">
                                 <Button type="button" variant="outline" onClick={() => setShowRegister(false)}>
                                     Cancel
                                 </Button>

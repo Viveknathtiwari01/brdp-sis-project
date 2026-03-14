@@ -384,29 +384,31 @@ export default function FeesPage() {
                                     : ""}
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4">
-                            <div className="space-y-1">
-                                <Label required>Amount (₹)</Label>
-                                <Input
-                                    type="number"
-                                    value={paymentAmount}
-                                    onChange={(e) => setPaymentAmount(e.target.value)}
-                                    placeholder="Enter payment amount"
-                                    max={selectedLedger ? selectedLedger.totalAmount - selectedLedger.paidAmount : undefined}
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <Label required>Payment Mode</Label>
-                                <Select value={paymentMode} onValueChange={(v) => setPaymentMode(v as "CASH" | "UPI")}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="CASH">Cash</SelectItem>
-                                        <SelectItem value="UPI">UPI</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                        <div className="space-y-5">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label required>Amount (₹)</Label>
+                                    <Input
+                                        type="number"
+                                        value={paymentAmount}
+                                        onChange={(e) => setPaymentAmount(e.target.value)}
+                                        placeholder="Enter payment amount"
+                                        max={selectedLedger ? selectedLedger.totalAmount - selectedLedger.paidAmount : undefined}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label required>Payment Mode</Label>
+                                    <Select value={paymentMode} onValueChange={(v) => setPaymentMode(v as "CASH" | "UPI")}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="CASH">Cash</SelectItem>
+                                            <SelectItem value="UPI">UPI</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                             {paymentMode === "UPI" && (
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                     <Label>Transaction ID</Label>
                                     <Input
                                         value={transactionId}
@@ -415,7 +417,7 @@ export default function FeesPage() {
                                     />
                                 </div>
                             )}
-                            <div className="flex justify-end gap-3 pt-2">
+                            <div className="flex justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-700/60">
                                 <Button variant="outline" onClick={() => setShowPayment(false)}>Cancel</Button>
                                 <Button onClick={processPayment} isLoading={submitting}>
                                     Process Payment

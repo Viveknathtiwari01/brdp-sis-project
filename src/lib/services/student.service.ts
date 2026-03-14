@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma/client";
 import { hashPassword } from "@/lib/auth/password";
-import { generateRegistrationNo, generateReceiptNumber } from "@/lib/utils";
+import { generateReceiptNumber } from "@/lib/utils";
 import type { StudentRegistrationInput } from "@/lib/validators/student";
 
 export class StudentService {
@@ -10,6 +10,12 @@ export class StudentService {
             where: { email: data.email },
         });
         if (existingUser) throw new Error("Email already registered");
+
+        const existingRegistrationNo = await prisma.student.findUnique({
+            where: { registrationNo: data.registrationNo },
+            select: { id: true },
+        });
+        if (existingRegistrationNo) throw new Error("Registration number already exists");
 
         // Get course & session info
         const course = await prisma.course.findUnique({
@@ -31,16 +37,6 @@ export class StudentService {
         if (feeStructures.length === 0) {
             throw new Error("No fee structure defined for this course and session. Please configure it in 'Fee Structure' settings first.");
         }
-
-        // Generate registration number
-        const studentCount = await prisma.student.count({
-            where: { courseId: data.courseId, sessionId: data.sessionId },
-        });
-        const registrationNo = generateRegistrationNo(
-            course.code,
-            new Date(session.startDate).getFullYear(),
-            studentCount + 1
-        );
 
         const hashedPassword = await hashPassword(data.password);
 
@@ -80,8 +76,8 @@ export class StudentService {
                     twelfthYear: data.twelfthYear,
                     twelfthPercentage: data.twelfthPercentage,
                     twelfthStream: data.twelfthStream,
-                    rollNo: data.rollNo || null,
-                    registrationNo,
+                    rollNo: data.rollNo,
+                    registrationNo: data.registrationNo,
                 },
             });
 
@@ -145,7 +141,7 @@ export class StudentService {
                     userId: createdBy,
                     action: "CREATE",
                     module: "Student",
-                    details: `Registered student: ${data.firstName} ${data.lastName} (${registrationNo})`,
+                    details: `Registered student: ${data.firstName} ${data.lastName} (${data.registrationNo})`,
                 },
             });
 

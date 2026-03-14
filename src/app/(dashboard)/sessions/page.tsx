@@ -146,22 +146,22 @@ export default function SessionsPage() {
                             <DialogTitle>Add Session</DialogTitle>
                             <DialogDescription>Create a new academic session.</DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleSubmit(onCreate)} className="space-y-4">
-                            <div className="space-y-1">
+                        <form onSubmit={handleSubmit(onCreate)} className="space-y-5">
+                            <div className="space-y-1.5">
                                 <Label required>Session Name</Label>
                                 <Input {...register("name")} placeholder="2024-2025" error={errors.name?.message as string} />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div className="space-y-1.5">
                                     <Label required>Start Date</Label>
                                     <Input {...register("startDate")} type="date" error={errors.startDate?.message as string} />
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                     <Label required>End Date</Label>
                                     <Input {...register("endDate")} type="date" error={errors.endDate?.message as string} />
                                 </div>
                             </div>
-                            <div className="flex justify-end gap-3 pt-2">
+                            <div className="flex justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-700/60">
                                 <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
                                 <Button type="submit" isLoading={submitting}>Create Session</Button>
                             </div>

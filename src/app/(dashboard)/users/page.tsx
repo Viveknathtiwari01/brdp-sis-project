@@ -212,20 +212,20 @@ export default function UsersPage() {
                             <DialogTitle>Create User</DialogTitle>
                             <DialogDescription>Create a new Admin or Student account.</DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleSubmit(onCreate)} className="space-y-4">
-                            <div className="space-y-1">
+                        <form onSubmit={handleSubmit(onCreate)} className="space-y-5">
+                            <div className="space-y-1.5">
                                 <Label required>Full Name</Label>
                                 <Input {...register("name")} error={errors.name?.message} />
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-1.5">
                                 <Label required>Email</Label>
                                 <Input {...register("email")} type="email" error={errors.email?.message} />
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-1.5">
                                 <Label required>Password</Label>
                                 <Input {...register("password")} type="password" error={errors.password?.message} />
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-1.5">
                                 <Label required>Role</Label>
                                 <Select onValueChange={(v) => setValue("role", v as "ADMIN" | "STUDENT")}>
                                     <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
@@ -236,7 +236,7 @@ export default function UsersPage() {
                                 </Select>
                                 {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}
                             </div>
-                            <div className="flex justify-end gap-3 pt-2">
+                            <div className="flex justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-700/60">
                                 <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
                                 <Button type="submit" isLoading={submitting}>Create User</Button>
                             </div>
