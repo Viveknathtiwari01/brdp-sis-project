@@ -8,7 +8,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import {
     GraduationCap,
     BookOpen,
@@ -18,263 +19,729 @@ import {
     Calendar,
     BarChart3,
     ArrowUpRight,
+    AlertTriangle,
+    Receipt,
+    Clock,
 } from "lucide-react";
 
-interface DashboardStats {
+type DashboardPayload = {
+  scope: "ADMIN" | "STUDENT";
+  kpis: {
     totalStudents: number;
     totalCourses: number;
-    totalFeeCollected: number;
-    totalPendingFees: number;
-    recentPayments: Array<{
-        id: string;
-        amount: number;
-        student: { firstName: string; lastName: string };
-        feeLedger: { semester: number };
-        paidAt: string;
+    feesCollected: number;
+    pendingFees: number;
+    overdueFees: number;
+  };
+  paymentModeTotals?: {
+    CASH: number;
+    UPI: number;
+  };
+  activeSession: string | null;
+  latestPayments: Array<{
+    id: string;
+    amount: number;
+    paidAt: string;
+    receiptNumber: string;
+    paymentMode: string;
+    student: {
+      name: string;
+      registrationNo: string;
+      course?: { name: string; code: string };
+    };
+    semester: number;
+  }>;
+  feeRecords: Array<{
+    id: string;
+    student: {
+      name: string;
+      registrationNo: string;
+      course?: { name: string; code: string };
+    };
+    totalAmount: number;
+    paidAmount: number;
+    pendingAmount: number;
+    dueDate: string | null;
+    dueAmount: number;
+    status: "PENDING" | "PAID" | "OVERDUE";
+  }>;
+  courseFeeOverview: Array<{
+    courseName: string;
+    courseCode: string;
+    collected: number;
+    pending: number;
+    overdue: number;
+  }>;
+  feeBarChart?: {
+    all: {
+      id: string;
+      label: string;
+      collected: number;
+      pending: number;
+      overdue: number;
+      recordCount: number;
+    };
+    byCourse: Array<{
+      id: string;
+      label: string;
+      courseCode: string;
+      courseName: string;
+      collected: number;
+      pending: number;
+      overdue: number;
+      recordCount: number;
     }>;
+    bySession: Array<{
+      id: string;
+      label: string;
+      sessionName: string;
+      collected: number;
+      pending: number;
+      overdue: number;
+      recordCount: number;
+    }>;
+    matrix: Array<{
+      courseCode: string;
+      courseName: string;
+      sessionName: string;
+      collected: number;
+      pending: number;
+      overdue: number;
+      recordCount: number;
+    }>;
+    filters: {
+      courses: Array<{ code: string; name: string }>;
+      sessions: Array<{ name: string }>;
+    };
+  };
+};
+
+function clamp01(v: number) {
+  return Math.max(0, Math.min(1, v));
+}
+
+function percent(part: number, total: number) {
+  if (!total) return 0;
+  return clamp01(part / total);
 }
 
 export default function DashboardPage() {
-    const { user } = useAuth();
-    const { apiFetch } = useApi();
-    const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState<DashboardStats | null>(null);
+  useAuth();
+  const { apiFetch } = useApi();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<DashboardPayload | null>(null);
+  const [sessionFilter, setSessionFilter] = useState<string>("ALL");
+  const [hovered, setHovered] = useState<any>(null);
+  const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
 
-    const fetchDashboardData = useCallback(async () => {
-        try {
-            setLoading(true);
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
 
-            // Fetch basic counts in parallel
-            const [studentsRes, coursesRes, paymentsRes] = await Promise.all([
-                apiFetch<{ success: boolean; data: { pagination: { total: number } } }>("/api/students?limit=1"),
-                apiFetch<{ success: boolean; data: Array<unknown> }>("/api/courses"),
-                apiFetch<{ success: boolean; data: { payments: Array<unknown>; pagination: { total: number } } }>("/api/payments?limit=5"),
-            ]);
+      const res = await apiFetch<{ success: boolean; data: DashboardPayload }>("/api/dashboard");
+      if (res.success) setData(res.data);
+    } catch {
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [apiFetch]);
 
-            setStats({
-                totalStudents: studentsRes?.data?.pagination?.total || 0,
-                totalCourses: Array.isArray(coursesRes?.data) ? coursesRes.data.length : 0,
-                totalFeeCollected: 0,
-                totalPendingFees: 0,
-                recentPayments: (paymentsRes?.data?.payments || []) as DashboardStats["recentPayments"],
-            });
-        } catch {
-            setStats({
-                totalStudents: 0,
-                totalCourses: 0,
-                totalFeeCollected: 0,
-                totalPendingFees: 0,
-                recentPayments: [],
-            });
-        } finally {
-            setLoading(false);
-        }
-    }, [apiFetch]);
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
-    useEffect(() => {
-        fetchDashboardData();
-    }, [fetchDashboardData]);
+  const chartMax = Math.max(
+    1,
+    ...(data?.courseFeeOverview || []).map((c) => Math.max(c.collected, c.pending, c.overdue))
+  );
 
-    const statCards = [
-        {
-            title: "Total Students",
-            value: stats?.totalStudents || 0,
-            icon: GraduationCap,
-            color: "text-blue-600",
-            bg: "bg-blue-50 dark:bg-blue-900/20",
-        },
-        {
-            title: "Active Courses",
-            value: stats?.totalCourses || 0,
-            icon: BookOpen,
-            color: "text-indigo-600",
-            bg: "bg-indigo-50 dark:bg-indigo-900/20",
-        },
-        {
-            title: "Fee Collected",
-            value: formatCurrency(stats?.totalFeeCollected || 0),
-            icon: IndianRupee,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50 dark:bg-emerald-900/20",
-        },
-        {
-            title: "Pending Fees",
-            value: formatCurrency(stats?.totalPendingFees || 0),
-            icon: TrendingUp,
-            color: "text-amber-600",
-            bg: "bg-amber-50 dark:bg-amber-900/20",
-        },
-    ];
+  const barSource = data?.feeBarChart;
 
-    return (
-        <DashboardShell>
-            <div className="space-y-8 animate-fade-in">
-                <PageHeader
-                    title="Dashboard Overview"
-                    // description={`Welcome back, ${user?.name || ""}. Here is what's happening today.`}
-                    // icon={<BarChart3 className="h-6 w-6 text-blue-800" />}
-                    actions={
-                        <div className="flex items-center gap-2 text-sm font-medium text-white dark:text-slate-400 bg-blue-800 dark:bg-slate-900 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm ">
-                            <Calendar className="h-4 w-4 text-white" />
-                            {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                        </div>
-                    }
-                />
+  const fixedCourses = [
+    { key: "B.A. Arts", label: "B.A. Arts" },
+    { key: "B.Sc. Math", label: "B.Sc. Math" },
+    { key: "B.Sc. Bio", label: "B.Sc. Bio" },
+    { key: "B Ed.", label: "B Ed." },
+    { key: "BCA", label: "BCA" },
+  ];
 
-                {/* Stats Grid */}
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    {statCards.map((card) => (
-                        <Card
-                            key={card.title}
-                            className="border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-300"
-                        >
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${card.bg}`}>
-                                        <card.icon className={`h-6 w-6 ${card.color}`} />
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                            {card.title}
-                                        </p>
-                                        {loading ? (
-                                            <Skeleton className="mt-2 h-7 w-20 ml-auto" />
-                                        ) : (
-                                            <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
-                                                {card.value}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="mt-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
-                                    <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                                        <ArrowUpRight className="h-3.5 w-3.5" />
-                                        <span>System Active</span>
-                                    </div>
-                                    <span className="text-[10px] text-slate-400">Updated just now</span>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+  const normalize = (s: string) => (s || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+  const barRows = (() => {
+    if (!barSource) return [] as any[];
+
+    const matrix = barSource.matrix || [];
+    const sessionSelected = sessionFilter !== "ALL" ? sessionFilter : null;
+
+    const pickFrom = sessionSelected ? matrix.filter((m) => m.sessionName === sessionSelected) : [];
+
+    return fixedCourses.map((c) => {
+      const m = sessionSelected
+        ? pickFrom.find((x) => normalize(x.courseName) === normalize(c.key))
+        : (barSource.byCourse || []).find((x) => normalize(x.courseName) === normalize(c.key));
+
+      return {
+        id: c.key,
+        mode: "COURSE" as const,
+        label: c.label,
+        courseName: c.key,
+        courseCode: m?.courseCode || "",
+        collected: m?.collected || 0,
+        pending: m?.pending || 0,
+        overdue: m?.overdue || 0,
+        recordCount: m?.recordCount || 0,
+        sessionName: sessionSelected || undefined,
+      };
+    });
+  })();
+
+  const stackedRows = barRows.map((r) => {
+    const overdue = Math.max(0, r.overdue || 0);
+    const pendingNonOverdue = Math.max(0, (r.pending || 0) - overdue);
+    const collected = Math.max(0, r.collected || 0);
+    const total = collected + pendingNonOverdue + overdue;
+    return {
+      ...r,
+      collected,
+      pendingNonOverdue,
+      overdue,
+      total,
+    };
+  });
+
+  const barMax = Math.max(1, ...stackedRows.map((r) => r.total));
+
+  const totalDue = (data?.kpis.feesCollected || 0) + (data?.kpis.pendingFees || 0);
+  const collectedPct = percent(data?.kpis.feesCollected || 0, totalDue);
+  const pendingPct = percent(data?.kpis.pendingFees || 0, totalDue);
+  const overduePct = percent(data?.kpis.overdueFees || 0, totalDue);
+
+  function formatCompactCurrency(v: number) {
+    if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
+    if (v >= 100000) return `₹${(v / 100000).toFixed(1)}L`;
+    if (v >= 1000) return `₹${Math.round(v / 1000)}K`;
+    return `₹${Math.round(v)}`;
+  }
+
+  return (
+    <DashboardShell>
+      <div className="space-y-6 animate-fade-in">
+        <PageHeader
+          title="Dashboard"
+          // description={`Welcome back, ${user?.name || ""}. Here is what's happening today.`}
+          // icon={<BarChart3 className="h-6 w-6 text-blue-800" />}
+          actions={
+            <div className="flex items-center gap-2 text-sm font-medium text-white bg-blue-800 px-3 py-2 rounded-lg border border-slate-200 shadow-sm dark:text-slate-200 dark:bg-slate-950 dark:border-slate-800">
+              <Calendar className="h-4 w-4 text-white" />
+              {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+            </div>
+          }
+        />
+
+        {/* Stats Grid */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+          <Card className="border-purple-300 bg-gradient-to-b from-purple-50 to-white dark:border-purple-900/60 dark:from-purple-500/10 dark:to-slate-950">
+            <CardContent className="p-5">
+              {loading ? (
+                <Skeleton className="h-14 w-full rounded-xl b" />
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Students</p>
+                    <p className="mt-1 text-3xl font-black text-purple-900 dark:text-purple-100">{data?.kpis.totalStudents || 0}</p>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
+                    <Users className="h-5 w-5 text-purple-600 dark:text-purple-400 border-purple-600 dark:border-purple-800" />
+                  </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
 
-                {/* Bottom Section */}
-                <div className="grid gap-6 lg:grid-cols-3">
-                    {/* Recent Payments */}
-                    <Card className="lg:col-span-2 border-slate-200 dark:border-slate-800 shadow-sm">
-                        <CardHeader className="flex flex-row items-center justify-between pb-4">
-                            <div>
-                                <CardTitle className="text-lg font-bold text-slate-900 dark:text-white">Recent Transactions</CardTitle>
-                                <p className="text-xs text-slate-500 mt-1">Latest fee payments recorded in system</p>
+          <Card className="border-blue-200 bg-gradient-to-b from-blue-50 to-white dark:border-blue-900/60 dark:from-blue-500/10 dark:to-slate-950">
+            <CardContent className="p-5">
+              {loading ? (
+                <Skeleton className="h-14 w-full rounded-xl" />
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Active Courses</p>
+                    <p className="mt-1 text-3xl font-black text-blue-900 dark:text-blue-100">{data?.kpis.totalCourses || 0}</p>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-blue-600 dark:border-slate-800 dark:bg-slate-900 dark:text-blue-400">
+                    <GraduationCap className="h-5 w-5" />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-emerald-200 bg-gradient-to-b from-emerald-50 to-white dark:border-emerald-900/60 dark:from-emerald-500/10 dark:to-slate-950">
+            <CardContent className="p-5">
+              {loading ? (
+                <Skeleton className="h-14 w-full rounded-xl" />
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Collected Fees</p>
+                    <p className="mt-1 text-2xl font-black text-emerald-700 dark:text-emerald-300">{formatCurrency(data?.kpis.feesCollected || 0)}</p>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-200 bg-white text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900 dark:text-emerald-300">
+                    <TrendingUp className="h-5 w-5" />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-amber-200 bg-gradient-to-b from-amber-50 to-white dark:border-amber-900/60 dark:from-amber-500/10 dark:to-slate-950">
+            <CardContent className="p-5">
+              {loading ? (
+                <Skeleton className="h-14 w-full rounded-xl" />
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pending Fees</p>
+                    <p className="mt-1 text-2xl font-black text-amber-700 dark:text-amber-300">{formatCurrency(data?.kpis.pendingFees || 0)}</p>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-200 bg-white text-amber-700 dark:border-amber-900/60 dark:bg-slate-900 dark:text-amber-300">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-rose-200 bg-gradient-to-b from-rose-50 to-white dark:border-rose-900/60 dark:from-rose-500/10 dark:to-slate-950">
+            <CardContent className="p-5">
+              {loading ? (
+                <Skeleton className="h-14 w-full rounded-xl" />
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Overdue Fees</p>
+                    <p className="mt-1 text-2xl font-black text-rose-700 dark:text-rose-300">{formatCurrency(data?.kpis.overdueFees || 0)}</p>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-rose-200 bg-white text-rose-700 dark:border-rose-900/60 dark:bg-slate-900 dark:text-rose-300">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-12">
+          <div className="lg:col-span-8 space-y-6">
+            <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 h-[540px] flex flex-col">
+              <CardHeader className="flex flex-row items-center justify-between pb-4">
+                <div>
+                  <CardTitle className="text-xl font-extrabold text-slate-900 dark:text-slate-100">Fee Collection Overview</CardTitle>
+                  {/* <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Collected vs pending vs overdue (filter by all / course / session)</p> */}
+                </div>
+                {/* <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-slate-200 text-slate-600 bg-white dark:border-slate-800 dark:text-slate-300 dark:bg-slate-950">
+                    {data?.activeSession || "Active Session"}
+                  </Badge>
+                </div> */}
+              </CardHeader>
+              <CardContent className="flex-1 overflow-auto">
+                {loading ? (
+                  <Skeleton className="h-[240px] w-full rounded-xl" />
+                ) : data?.scope === "ADMIN" && stackedRows.length > 0 ? (
+                  <div
+                    className="relative rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                    onMouseLeave={() => {
+                      setHovered(null);
+                      setHoverPos(null);
+                    }}
+                    onMouseMove={(e) => {
+                      if (!hovered) return;
+                      setHoverPos({ x: e.clientX, y: e.clientY });
+                    }}
+                  >
+                    {hovered && hoverPos ? (
+                      <div
+                        className="pointer-events-none fixed z-50 w-80 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-950"
+                        style={{ left: hoverPos.x + 14, top: hoverPos.y + 14 }}
+                      >
+                        <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
+                          {hovered.mode === "COURSE"
+                            ? `${hovered.courseName}${hovered.courseCode ? ` • ${hovered.courseCode}` : ""}`
+                            : hovered.mode === "SESSION"
+                              ? hovered.sessionName
+                              : hovered.label}
+                        </p>
+                        <div className="mt-2 space-y-1 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+                              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-500" />
+                              Collected
+                            </span>
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+                              {formatCurrency(hovered.collected || 0)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-500" />
+                              Pending
+                            </span>
+                            <span className="font-semibold text-amber-700 dark:text-amber-300">
+                              {formatCurrency(hovered.pendingNonOverdue || 0)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
+                              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-rose-500" />
+                              Overdue
+                            </span>
+                            <span className="font-semibold text-rose-700 dark:text-rose-300">
+                              {formatCurrency(hovered.overdue || 0)}
+                            </span>
+                          </div>
+                          <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <span className="text-slate-500 dark:text-slate-400">Total records</span>
+                            <span className="font-semibold text-slate-700 dark:text-slate-200">
+                              {hovered.recordCount || 0}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg ml-3 font-medium text-slate-600 dark:text-slate-300">Session:</span>
+                          <Select value={sessionFilter} onValueChange={setSessionFilter}>
+                            <SelectTrigger className="h-9 w-[180px] border-slate-200 bg-white text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
+                              <SelectValue placeholder="All Sessions" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="ALL">All Sessions</SelectItem>
+                              {(barSource?.filters?.sessions || []).map((s) => (
+                                <SelectItem key={s.name} value={s.name}>
+                                  {s.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-6 text-sm text-slate-500 dark:text-slate-400 p-3">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block h-4 w-4 rounded-sm bg-emerald-500" />
+                          Collected
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block h-4 w-4 rounded-sm bg-amber-500" />
+                          Pending
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block h-4 w-4 rounded-sm bg-rose-500" />
+                          Overdue
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                        <div className="grid gap-4" style={{ gridTemplateColumns: "64px 1fr" }}>
+                          <div className="flex h-[240px] flex-col">
+                            <div className="relative flex-1">
+                              {Array.from({ length: 6 }).map((_, i) => {
+                                const pct = i / 5;
+                                const value = Math.round((barMax * (1 - pct)) / 100) * 100;
+                                return (
+                                  <div key={i} className="absolute left-0 right-0" style={{ top: `${pct * 100}%` }}>
+                                    <div className="-translate-y-1/2 text-[11px] text-slate-500 dark:text-slate-400">
+                                      {value >= 1000 ? `₹${Math.round(value / 1000)}K` : `₹${value}`}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
-                            <Badge className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-none px-2.5 py-1">
-                                <div className="mr-1.5 h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse" />
-                                Live Feed
-                            </Badge>
-                        </CardHeader>
-                        <CardContent>
-                            {loading ? (
-                                <div className="space-y-4">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Skeleton key={i} className="h-14 w-full rounded-xl" />
-                                    ))}
-                                </div>
-                            ) : stats?.recentPayments && stats.recentPayments.length > 0 ? (
-                                <div className="space-y-3">
-                                    {stats.recentPayments.map((payment) => (
-                                        <div
-                                            key={payment.id}
-                                            className="group flex items-center justify-between rounded-xl border border-transparent bg-slate-50 p-4 transition-all hover:border-slate-200 hover:bg-white dark:bg-slate-900/50 dark:hover:border-slate-700 dark:hover:bg-slate-900"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:bg-slate-800">
-                                                    <IndianRupee className="h-5 w-5 text-indigo-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                                                        {payment.student.firstName} {payment.student.lastName}
-                                                    </p>
-                                                    <p className="text-xs text-slate-500 font-medium">
-                                                        Semester {payment.feeLedger.semester} • {new Date(payment.paidAt).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                                                    +{formatCurrency(payment.amount)}
-                                                </p>
-                                                <Badge variant="outline" className="text-[10px] h-4 mt-1 border-emerald-200 text-emerald-600 dark:border-emerald-900/50">Success</Badge>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                                    <div className="h-16 w-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-4">
-                                        <IndianRupee className="h-8 w-8 opacity-20" />
-                                    </div>
-                                    <p className="text-sm font-medium">No recent transactions found</p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                            <div className="h-8" />
+                          </div>
 
-                    {/* Quick Info & Actions */}
-                    <div className="space-y-6">
-                        <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+                          <div className="flex h-[240px] flex-col">
+                            <div className="relative flex-1">
+                              <div className="absolute bottom-0 left-0 right-0 border-t border-slate-200 dark:border-slate-800" />
+
+                              <div
+                                className="grid h-full items-end gap-5"
+                                style={{ gridTemplateColumns: `repeat(${Math.min(stackedRows.length, 12)}, minmax(0, 1fr))` }}
+                              >
+                                {stackedRows.slice(0, 5).map((r) => {
+                                  const hCollected = Math.round(percent(r.collected, barMax) * 100);
+                                  const hPending = Math.round(percent(r.pendingNonOverdue, barMax) * 100);
+                                  const hOverdue = Math.round(percent(r.overdue, barMax) * 100);
+
+                                  return (
+                                    <div key={r.id} className="flex flex-col items-center">
+                                      <div
+                                        className="w-10 bg-slate-200 overflow-hidden shadow-inner dark:bg-slate-800/60"
+                                        style={{ height: "180px" }}
+                                        onMouseEnter={() => setHovered(r)}
+                                      >
+                                        <div className="flex h-full flex-col justify-end">
+                                          <div className="w-full bg-emerald-500" style={{ height: `${hCollected}%` }} />
+                                          <div className="w-full bg-amber-500" style={{ height: `${hPending}%` }} />
+                                          <div className="w-full bg-rose-500" style={{ height: `${hOverdue}%` }} />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            <div
+                              className="grid items-start gap-5 pt-2"
+                              style={{ gridTemplateColumns: `repeat(${Math.min(stackedRows.length, 12)}, minmax(0, 1fr))` }}
+                            >
+                              {stackedRows.slice(0, 5).map((r) => {
+                                const xLabel = r.courseName || r.label;
+                                return (
+                                  <div key={`${r.id}-label`} className="flex justify-center">
+                                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[90px]">{xLabel}</p>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+                    <BarChart3 className="h-10 w-10 opacity-20" />
+                    <p className="mt-3 text-sm font-medium">No overview data available</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl font-extrabold text-slate-900 dark:text-slate-100">Payment Modes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <Skeleton className="h-24 w-full rounded-xl" />
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 p-2">
+                    <div className="border-amber-200 bg-gradient-to-b from-amber-50 to-white dark:border-amber-900/60 dark:from-amber-500/10 dark:to-slate-950 border rounded-lg p-4">
+                      <p className="text-amber-600 text-sm font-semibold uppercase tracking-wider">Total Cash Payment</p>
+                      <p className="mt-2 text-xl font-black text-amber-900 dark:text-amber-100">
+                        {formatCurrency(data?.paymentModeTotals?.CASH || 0)}
+                      </p>
+                    </div>
+                    <div className="border-rose-200 bg-gradient-to-b from-rose-50 to-white dark:border-rose-900/60 dark:from-rose-500/10 dark:to-slate-950 border rounded-lg p-4">
+                      <p className="text-rose-600 text-sm font-semibold uppercase tracking-wider">Total UPI Payment</p>
+                      <p className="mt-2 text-xl font-black text-rose-900 dark:text-rose-100">
+                        {formatCurrency(data?.paymentModeTotals?.UPI || 0)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+                    <div className="lg:col-span-4 space-y-6">
+                        <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 h-[540px] flex flex-col">
                             <CardHeader className="pb-3">
-                                <CardTitle className="text-lg font-bold">System Status</CardTitle>
+                                <CardTitle className="text-xl font-extrabold text-slate-900 dark:text-slate-100">Latest Payments</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center gap-4 p-4 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white">
-                                        <Calendar className="h-5 w-5" />
+                            <CardContent className="flex-1 overflow-auto">
+                                {loading ? (
+                                    <div className="space-y-3">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Skeleton key={i} className="h-12 w-full rounded-xl" />
+                                        ))}
                                     </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">Academic Session</p>
-                                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-0.5">2024 - 2025</p>
+                                ) : (data?.latestPayments?.length || 0) > 0 ? (
+                                    <div className="space-y-2">
+                                        {(data?.latestPayments || []).map((p) => (
+                                            <div key={p.id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-200 dark:bg-slate-950 dark:border-slate-800">
+                                                        <Receipt className="h-5 w-5 text-cyan-300" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900 dark:text-slate-100 line-clamp-1">{p.student.name}</p>
+                                                        <p className="text-[11px] text-slate-500">
+                                                            Sem {p.semester} • {formatDateTime(p.paidAt)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-sm font-bold text-emerald-300">{formatCurrency(p.amount)}</p>
+                                                    <p className="text-[10px] text-slate-500 font-mono">{p.receiptNumber}</p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                </div>
-
-                                <div className="flex items-center gap-4 p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white">
-                                        <Users className="h-5 w-5" />
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-10 text-slate-500">
+                                        <IndianRupee className="h-10 w-10 opacity-20" />
+                                        <p className="mt-2 text-sm font-medium">No payments found</p>
                                     </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-emerald-900 dark:text-emerald-300 uppercase tracking-wider">Your Access Level</p>
-                                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-0.5">{user?.role?.replace("_", " ")}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                        <BarChart3 className="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">System Health</p>
-                                        <div className="flex items-center gap-1.5 mt-1">
-                                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                                            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">All services online</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
                             </CardContent>
                         </Card>
 
-                        <Card className="border-indigo-100 dark:border-indigo-900/50 bg-indigo-600 text-white overflow-hidden relative">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <GraduationCap className="h-24 w-24" />
-                            </div>
-                            <CardContent className="p-6 relative z-10">
-                                <h3 className="font-bold text-lg">Need Support?</h3>
-                                <p className="text-indigo-100 text-sm mt-2 leading-relaxed">Contact the IT helpdesk for system assistance or permission requests.</p>
-                                <button className="mt-4 w-full py-2 bg-white text-indigo-600 rounded-lg font-bold text-sm hover:bg-indigo-50 transition-colors">
-                                    Get Assistance
-                                </button>
+                        <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-xl font-extrabold text-slate-900 dark:text-slate-100">Fee Statistics</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-5">
+                                {loading ? (
+                                    <Skeleton className="h-40 w-full rounded-xl" />
+                                ) : (
+                                    <div className="flex items-center justify-between gap-6">
+                                        <div className="relative h-28 w-28 shrink-0">
+                                            <div
+                                                className="h-28 w-28 rounded-full"
+                                                style={{
+                                                    background: `conic-gradient(#22c55e ${Math.round(collectedPct * 360)}deg, #f59e0b ${Math.round((collectedPct + pendingPct) * 360)}deg, #f43f5e ${Math.round((collectedPct + pendingPct + overduePct) * 360)}deg, #1f2937 0deg)`,
+                                                }}
+                                            />
+                                            <div className="absolute inset-3 rounded-full bg-white border border-slate-200 flex items-center justify-center dark:bg-slate-950 dark:border-slate-800">
+                                                <div className="text-center">
+                                                    <p className="text-xl font-black text-slate-900 dark:text-slate-100">{Math.round(collectedPct * 100)}%</p>
+                                                    <p className="text-[10px] text-slate-500">Collected</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 space-y-2 text-sm">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-slate-400">
+                                                    <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" />
+                                                    Collected
+                                                </div>
+                                                <p className="font-bold text-emerald-300">{formatCurrency(data?.kpis.feesCollected || 0)}</p>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-slate-400">
+                                                    <span className="h-2.5 w-2.5 rounded-sm bg-amber-500" />
+                                                    Pending
+                                                </div>
+                                                <p className="font-bold text-amber-300">{formatCurrency(data?.kpis.pendingFees || 0)}</p>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-slate-400">
+                                                    <span className="h-2.5 w-2.5 rounded-sm bg-rose-500" />
+                                                    Overdue
+                                                </div>
+                                                <p className="font-bold text-rose-300">{formatCurrency(data?.kpis.overdueFees || 0)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* <div className="grid grid-cols-2 gap-3">
+                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="h-4 w-4 text-amber-300" />
+                                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Pending</p>
+                                        </div>
+                                        <p className="mt-2 text-lg font-black text-slate-900 dark:text-slate-100">{formatCurrency(data?.kpis.pendingFees || 0)}</p>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                                        <div className="flex items-center gap-2">
+                                            <AlertTriangle className="h-4 w-4 text-rose-300" />
+                                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Overdue</p>
+                                        </div>
+                                        <p className="mt-2 text-lg font-black text-slate-900 dark:text-slate-100">{formatCurrency(data?.kpis.overdueFees || 0)}</p>
+                                    </div>
+                                </div> */}
                             </CardContent>
                         </Card>
                     </div>
                 </div>
+
+                <Card className="border-slate-200 bg-white overflow-hidden dark:border-slate-800 dark:bg-slate-950">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="text-xl font-extrabold text-slate-900 dark:text-slate-100">Student Fee Records</CardTitle>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Per-student fee summary (total program fee, paid till today, pending, and current dues)</p>
+                        </div>
+                        <Badge variant="outline" className="border-slate-200 text-slate-600 bg-white dark:border-slate-700 dark:text-slate-300 dark:bg-slate-950">
+                            {data?.scope === "STUDENT" ? "My Ledger" : "All Students"}
+                        </Badge>
+                    </CardHeader>
+                    <CardContent>
+                        {loading ? (
+                            <Skeleton className="h-48 w-full rounded-xl" />
+                        ) : (data?.feeRecords?.length || 0) > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+                                            <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Reg. No</th>
+                                            <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Student</th>
+                                            <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Course</th>
+                                            <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Total Amt</th>
+                                            <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Paid</th>
+                                            <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Pending</th>
+                                            <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Due Date</th>
+                                            <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Due Amt</th>
+                                            <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        {(data?.feeRecords || []).map((r) => {
+                                            const overdue = r.status === "OVERDUE";
+                                            return (
+                                                <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-colors">
+                                                    <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">{r.student.registrationNo}</td>
+                                                    <td className="px-4 py-3">
+                                                        <p className="font-semibold text-slate-900 dark:text-slate-100">{r.student.name}</p>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
+                                                        {r.student.course ? `${r.student.course.name} (${r.student.course.code})` : "-"}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{formatCurrency(r.totalAmount)}</td>
+                                                    <td className="px-4 py-3 text-emerald-700 dark:text-emerald-300">{formatCurrency(r.paidAmount)}</td>
+                                                    <td className="px-4 py-3 text-amber-700 dark:text-amber-300">{formatCurrency(r.pendingAmount)}</td>
+                                                    <td className={`px-4 py-3 ${overdue ? "text-rose-700 dark:text-rose-300" : "text-slate-500 dark:text-slate-400"}`}>
+                                                        {r.dueDate ? formatDate(r.dueDate) : "-"}
+                                                    </td>
+                                                    <td className={`px-4 py-3 ${overdue ? "text-rose-700 dark:text-rose-300" : "text-slate-600 dark:text-slate-300"}`}>
+                                                        {r.dueAmount > 0 ? formatCurrency(r.dueAmount) : "-"}
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <span
+                                                            className={
+                                                                "inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold " +
+                                                                (r.status === "PAID"
+                                                                    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                                                    : r.status === "OVERDUE"
+                                                                        ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-500/10 dark:text-rose-300"
+                                                                        : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-500/10 dark:text-amber-300")
+                                                            }
+                                                        >
+                                                            {r.status}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-14 text-slate-500">
+                                <Users className="h-10 w-10 opacity-20" />
+                                <p className="mt-3 text-sm font-medium">No fee records found</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </DashboardShell>
     );
