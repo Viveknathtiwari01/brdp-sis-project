@@ -250,4 +250,90 @@ export class StudentService {
         if (!student) throw new Error("Student not found");
         return student;
     }
+
+    static async update(
+        id: string,
+        data: Partial<Omit<StudentRegistrationInput, "email" | "password">>,
+        updatedBy: string
+    ) {
+        const existing = await prisma.student.findUnique({
+            where: { id, isDeleted: false },
+            include: { user: { select: { id: true, email: true } } },
+        });
+
+        if (!existing) throw new Error("Student not found");
+
+        if (data.registrationNo) {
+            const regExists = await prisma.student.findFirst({
+                where: {
+                    registrationNo: data.registrationNo,
+                    id: { not: id },
+                },
+                select: { id: true },
+            });
+            if (regExists) throw new Error("Registration number already exists");
+        }
+
+        const updateData: Record<string, unknown> = { ...data };
+        if (data.dateOfBirth) updateData.dateOfBirth = new Date(data.dateOfBirth);
+
+        const fullName =
+            data.firstName || data.lastName
+                ? `${data.firstName ?? existing.firstName} ${data.lastName ?? existing.lastName}`.trim()
+                : null;
+
+        const result = await prisma.$transaction(async (tx) => {
+            const student = await tx.student.update({
+                where: { id },
+                data: updateData,
+                include: {
+                    user: { select: { id: true, email: true, name: true, isActive: true } },
+                    course: { select: { id: true, name: true, code: true } },
+                    session: { select: { id: true, name: true } },
+                },
+            });
+
+            if (fullName) {
+                await tx.user.update({
+                    where: { id: student.userId },
+                    data: { name: fullName },
+                });
+            }
+
+            await tx.auditLog.create({
+                data: {
+                    userId: updatedBy,
+                    action: "UPDATE",
+                    module: "Student",
+                    details: `Updated student: ${student.firstName} ${student.lastName} (${student.registrationNo})`,
+                },
+            });
+
+            return student;
+        });
+
+        return result;
+    }
+
+    static async softDelete(id: string, deletedBy: string) {
+        const existing = await prisma.student.findUnique({
+            where: { id, isDeleted: false },
+            select: { id: true, userId: true, registrationNo: true },
+        });
+        if (!existing) throw new Error("Student not found");
+
+        await prisma.$transaction(async (tx) => {
+            await tx.student.update({ where: { id }, data: { isDeleted: true } });
+            await tx.user.update({ where: { id: existing.userId }, data: { isDeleted: true, isActive: false } });
+
+            await tx.auditLog.create({
+                data: {
+                    userId: deletedBy,
+                    action: "DELETE",
+                    module: "Student",
+                    details: `Soft-deleted student ID: ${id} (${existing.registrationNo})`,
+                },
+            });
+        });
+    }
 }

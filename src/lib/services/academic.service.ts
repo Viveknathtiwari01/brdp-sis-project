@@ -127,6 +127,15 @@ export class AcademicService {
         });
     }
 
+    static async getSessionById(id: string) {
+        const session = await prisma.session.findUnique({
+            where: { id, isDeleted: false },
+            include: { feeStructures: true, students: { select: { id: true } } },
+        });
+        if (!session) throw new Error("Session not found");
+        return session;
+    }
+
     // ── Fee Structure CRUD ───────────────────────────────────
     static async createFeeStructure(data: FeeStructureInput, createdBy: string) {
         const existing = await prisma.courseFeeStructure.findUnique({

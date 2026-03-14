@@ -12,11 +12,20 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { courseSchema, type CourseInput } from "@/lib/validators/academic";
 import toast from "react-hot-toast";
-import { Plus, BookOpen } from "lucide-react";
+import { Plus, BookOpen, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { SearchBox } from "@/components/shared/search-box";
+import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
 
 interface CourseData {
     id: string;
@@ -35,6 +44,14 @@ export default function CoursesPage() {
     const [loading, setLoading] = useState(true);
     const [showCreate, setShowCreate] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [search, setSearch] = useState("");
+
+    const [editOpen, setEditOpen] = useState(false);
+    const [editSaving, setEditSaving] = useState(false);
+    const [selectedCourse, setSelectedCourse] = useState<CourseData | null>(null);
+
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { register, handleSubmit, reset, formState: { errors } } = useForm<any>({
@@ -56,6 +73,80 @@ export default function CoursesPage() {
     useEffect(() => {
         fetchCourses();
     }, [fetchCourses]);
+
+    const canEdit = hasPermission("course:edit");
+    const canDelete = hasPermission("course:delete");
+    const canUseActions = canEdit || canDelete;
+
+    const filteredCourses = courses.filter((c) => {
+        const q = search.trim().toLowerCase();
+        if (!q) return true;
+        return `${c.name} ${c.code}`.toLowerCase().includes(q);
+    });
+
+    const openEdit = (course: CourseData) => {
+        setSelectedCourse({ ...course });
+        setEditOpen(true);
+    };
+
+    const saveEdit = async () => {
+        if (!selectedCourse) return;
+        setEditSaving(true);
+        try {
+            const payload = {
+                name: selectedCourse.name,
+                code: selectedCourse.code,
+                description: selectedCourse.description ?? undefined,
+                duration: selectedCourse.duration,
+                totalSemesters: selectedCourse.totalSemesters,
+            };
+            const res = await apiFetch<{ success: boolean; message?: string }>(`/api/courses/${selectedCourse.id}`,
+                {
+                    method: "PUT",
+                    body: JSON.stringify(payload),
+                }
+            );
+            if (res.success) {
+                toast.success("Course updated successfully");
+                setEditOpen(false);
+                setSelectedCourse(null);
+                fetchCourses();
+            } else {
+                toast.error(res.message || "Failed to update");
+            }
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to update");
+        } finally {
+            setEditSaving(false);
+        }
+    };
+
+    const confirmDelete = (course: CourseData) => {
+        setSelectedCourse(course);
+        setDeleteOpen(true);
+    };
+
+    const doDelete = async () => {
+        if (!selectedCourse) return;
+        setDeleting(true);
+        try {
+            const res = await apiFetch<{ success: boolean; message?: string }>(`/api/courses/${selectedCourse.id}`,
+                { method: "DELETE" }
+            );
+            if (res.success) {
+                toast.success("Course deleted successfully");
+                setDeleteOpen(false);
+                setSelectedCourse(null);
+                fetchCourses();
+            } else {
+                toast.error(res.message || "Failed to delete");
+            }
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to delete");
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     const onCreate = async (data: CourseInput) => {
         setSubmitting(true);
@@ -96,24 +187,70 @@ export default function CoursesPage() {
                     }
                 />
 
+                <Card className="shadow-sm">
+                    <CardContent className="p-4">
+                        <SearchBox
+                            value={search}
+                            onChange={setSearch}
+                            placeholder="Search by course name or code..."
+                        />
+                    </CardContent>
+                </Card>
+
                 {loading ? (
                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                         {[...Array(3)].map((_, i) => (
                             <Card key={i}><CardContent className="p-6"><Skeleton className="h-32 w-full" /></CardContent></Card>
                         ))}
                     </div>
-                ) : courses.length > 0 ? (
+                ) : filteredCourses.length > 0 ? (
                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                        {courses.map((course) => (
+                        {filteredCourses.map((course) => (
                             <Card key={course.id} className="hover:shadow-lg transition-shadow">
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center justify-between">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900/30">
                                             <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                                         </div>
-                                        <Badge variant={course.isActive ? "success" : "danger"}>
-                                            {course.isActive ? "Active" : "Inactive"}
-                                        </Badge>
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant={course.isActive ? "success" : "danger"}>
+                                                {course.isActive ? "Active" : "Inactive"}
+                                            </Badge>
+                                            {canUseActions && (
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-9 w-9 rounded-lg"
+                                                            aria-label="Course actions"
+                                                        >
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        {canEdit && (
+                                                            <DropdownMenuItem onClick={() => openEdit(course)}>
+                                                                <Pencil className="h-4 w-4" />
+                                                                Edit
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                        {canDelete && (
+                                                            <>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem
+                                                                    className="text-red-600 focus:text-red-700 focus:bg-red-50 dark:focus:bg-red-950/30"
+                                                                    onClick={() => confirmDelete(course)}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            </>
+                                                        )}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            )}
+                                        </div>
                                     </div>
                                     <CardTitle className="mt-3">{course.name}</CardTitle>
                                     <CardDescription className="font-mono text-xs">{course.code}</CardDescription>
@@ -181,6 +318,85 @@ export default function CoursesPage() {
                         </form>
                     </DialogContent>
                 </Dialog>
+
+                {/* Edit Course */}
+                <Dialog
+                    open={editOpen}
+                    onOpenChange={(open) => {
+                        setEditOpen(open);
+                        if (!open) setSelectedCourse(null);
+                    }}
+                >
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Edit Course</DialogTitle>
+                            <DialogDescription>Update course details.</DialogDescription>
+                        </DialogHeader>
+                        {selectedCourse && (
+                            <div className="space-y-5">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label required>Course Name</Label>
+                                        <Input
+                                            value={selectedCourse.name}
+                                            onChange={(e) => setSelectedCourse({ ...selectedCourse, name: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label required>Course Code</Label>
+                                        <Input
+                                            value={selectedCourse.code}
+                                            onChange={(e) => setSelectedCourse({ ...selectedCourse, code: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label required>Duration (Years)</Label>
+                                        <Input
+                                            type="number"
+                                            value={selectedCourse.duration}
+                                            onChange={(e) => setSelectedCourse({ ...selectedCourse, duration: Number(e.target.value || 0) })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label required>Total Semesters</Label>
+                                        <Input
+                                            type="number"
+                                            value={selectedCourse.totalSemesters}
+                                            onChange={(e) => setSelectedCourse({ ...selectedCourse, totalSemesters: Number(e.target.value || 0) })}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label>Description</Label>
+                                    <Input
+                                        value={selectedCourse.description || ""}
+                                        onChange={(e) => setSelectedCourse({ ...selectedCourse, description: e.target.value })}
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-700/60">
+                                    <Button variant="outline" onClick={() => setEditOpen(false)}>
+                                        Cancel
+                                    </Button>
+                                    <Button onClick={saveEdit} isLoading={editSaving}>
+                                        Save Changes
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
+
+                <ConfirmDeleteDialog
+                    open={deleteOpen}
+                    onOpenChange={(open) => {
+                        setDeleteOpen(open);
+                        if (!open) setSelectedCourse(null);
+                    }}
+                    title="Delete Course"
+                    description="This will soft-delete the course (kept in DB)."
+                    confirming={deleting}
+                    onConfirm={doDelete}
+                />
             </div>
         </DashboardShell>
     );
