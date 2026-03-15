@@ -38,30 +38,30 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated) return null;
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f172a]">
+        <div className="min-h-screen overflow-x-hidden bg-[#f8fafc] dark:bg-[#0f172a]">
             <div className="hidden lg:block">
                 <Sidebar
                     collapsed={sidebarCollapsed}
-                    onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
+                    onToggleCollapsedAction={() => setSidebarCollapsed((v) => !v)}
                     variant="desktop"
                 />
             </div>
 
             <Dialog open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-                <DialogContent className="w-[min(92vw,320px)] p-0 left-0 top-0 translate-x-0 translate-y-0 rounded-none h-screen max-w-none">
+                <DialogContent className="w-[min(92vw,320px)] p-0 left-0 top-0 translate-x-0 translate-y-0 rounded-none h-screen max-w-none gap-0 border-0 bg-transparent shadow-none">
                     <DialogTitle className="sr-only">Navigation</DialogTitle>
                     <Sidebar
                         collapsed={false}
-                        onToggleCollapsed={() => undefined}
+                        onToggleCollapsedAction={() => undefined}
                         variant="mobile"
                         onNavigate={() => setMobileNavOpen(false)}
                     />
                 </DialogContent>
             </Dialog>
 
-            <div className={"transition-all duration-300 " + desktopOffsetClass}>
+            <div className={"min-w-0 overflow-x-hidden transition-all duration-300 " + desktopOffsetClass}>
                 <Topbar onMobileMenuClick={() => setMobileNavOpen(true)} />
-                <main className="p-4 sm:p-6 lg:p-8">
+                <main className="max-w-full overflow-x-hidden p-4 sm:p-6 lg:p-8">
                     {children}
                 </main>
             </div>

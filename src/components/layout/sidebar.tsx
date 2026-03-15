@@ -14,12 +14,12 @@ import {
 
 type SidebarProps = {
     collapsed: boolean;
-    onToggleCollapsed: () => void;
+    onToggleCollapsedAction: () => void;
     variant?: "desktop" | "mobile";
     onNavigate?: () => void;
 };
 
-export function Sidebar({ collapsed, onToggleCollapsed, variant = "desktop", onNavigate }: SidebarProps) {
+export function Sidebar({ collapsed, onToggleCollapsedAction, variant = "desktop", onNavigate }: SidebarProps) {
     const pathname = usePathname();
     const { hasPermission, user } = useAuth();
 
@@ -38,7 +38,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, variant = "desktop", onN
                     ? "fixed left-0 top-0 z-40 h-screen"
                     : "relative h-full",
                 "bg-[#000080] transition-all duration-300 ease-in-out flex flex-col",
-                collapsed ? "w-[70px]" : "w-[260px]"
+                variant === "mobile" ? "w-full" : collapsed ? "w-[70px]" : "w-[260px]"
             )}
         >
             {/* Logo */}
@@ -101,7 +101,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, variant = "desktop", onN
             {variant === "desktop" ? (
                 <div className="p-3 border-t border-white/10">
                     <button
-                        onClick={onToggleCollapsed}
+                        onClick={onToggleCollapsedAction}
                         className="flex h-8 w-full items-center justify-center rounded-lg border border-white/20 text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-200"
                         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                     >
