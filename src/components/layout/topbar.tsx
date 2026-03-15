@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useTheme } from "next-themes";
 import { getInitials } from "@/lib/utils";
 import {
     DropdownMenu,
@@ -19,13 +18,16 @@ import {
     User,
     Bell,
     Search,
-    ChevronDown
+    ChevronDown,
+    Menu
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
-export function Topbar() {
+type TopbarProps = {
+    onMobileMenuClick?: () => void;
+};
+
+export function Topbar({ onMobileMenuClick }: TopbarProps) {
     const { user, logout } = useAuth();
-    const { theme, setTheme } = useTheme();
 
     const roleLabel: Record<string, string> = {
         SYSTEM_ADMIN: "System Admin",
@@ -34,10 +36,19 @@ export function Topbar() {
     };
 
     return (
-        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/95 backdrop-blur-md px-6 dark:border-slate-800 dark:bg-slate-950/95">
-            {/* Search */}
-            <div className="flex items-center gap-4 flex-1">
-                <div className="relative hidden md:block w-full mr-8">
+        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 sm:px-6 dark:border-slate-800 dark:bg-slate-950/95">
+            {/* Left side */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+                <button
+                    type="button"
+                    onClick={onMobileMenuClick}
+                    className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                    aria-label="Open navigation"
+                >
+                    <Menu className="h-5 w-5" />
+                </button>
+
+                <div className="relative hidden md:block w-full mr-8 min-w-0">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                     <input
                         type="text"

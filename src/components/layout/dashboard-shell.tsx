@@ -1,14 +1,22 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
     const { isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
+
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+    const desktopOffsetClass = useMemo(() => {
+        return sidebarCollapsed ? "lg:ml-[70px]" : "lg:ml-[260px]";
+    }, [sidebarCollapsed]);
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
@@ -31,10 +39,29 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f172a]">
-            <Sidebar />
-            <div className="ml-[260px] transition-all duration-300">
-                <Topbar />
-                <main className="p-8">
+            <div className="hidden lg:block">
+                <Sidebar
+                    collapsed={sidebarCollapsed}
+                    onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
+                    variant="desktop"
+                />
+            </div>
+
+            <Dialog open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+                <DialogContent className="w-[min(92vw,320px)] p-0 left-0 top-0 translate-x-0 translate-y-0 rounded-none h-screen max-w-none">
+                    <DialogTitle className="sr-only">Navigation</DialogTitle>
+                    <Sidebar
+                        collapsed={false}
+                        onToggleCollapsed={() => undefined}
+                        variant="mobile"
+                        onNavigate={() => setMobileNavOpen(false)}
+                    />
+                </DialogContent>
+            </Dialog>
+
+            <div className={"transition-all duration-300 " + desktopOffsetClass}>
+                <Topbar onMobileMenuClick={() => setMobileNavOpen(true)} />
+                <main className="p-4 sm:p-6 lg:p-8">
                     {children}
                 </main>
             </div>

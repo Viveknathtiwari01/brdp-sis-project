@@ -334,7 +334,7 @@ export default function DashboardPage() {
 
         <div className="grid gap-6 lg:grid-cols-12">
           <div className="lg:col-span-8 space-y-6">
-            <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 h-[540px] flex flex-col">
+            <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:h-[540px] flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between pb-4">
                 <div>
                   <CardTitle className="text-xl font-extrabold text-slate-900 dark:text-slate-100">Fee Collection Overview</CardTitle>
@@ -446,8 +446,8 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-                        <div className="grid gap-4" style={{ gridTemplateColumns: "64px 1fr" }}>
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950 overflow-x-auto">
+                        <div className="grid gap-4 min-w-[520px]" style={{ gridTemplateColumns: "64px 1fr" }}>
                           <div className="flex h-[240px] flex-col">
                             <div className="relative flex-1">
                               {Array.from({ length: 6 }).map((_, i) => {
@@ -532,7 +532,7 @@ export default function DashboardPage() {
                 {loading ? (
                   <Skeleton className="h-24 w-full rounded-xl" />
                 ) : (
-                  <div className="grid grid-cols-2 gap-3 p-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-2">
                     <div className="border-amber-200 bg-gradient-to-b from-amber-50 to-white dark:border-amber-900/60 dark:from-amber-500/10 dark:to-slate-950 border rounded-lg p-4">
                       <p className="text-amber-600 text-sm font-semibold uppercase tracking-wider">Total Cash Payment</p>
                       <p className="mt-2 text-xl font-black text-amber-900 dark:text-amber-100">
@@ -552,7 +552,7 @@ export default function DashboardPage() {
           </div>
 
                     <div className="lg:col-span-4 space-y-6">
-                        <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 h-[540px] flex flex-col">
+                        <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:h-[540px] flex flex-col">
                             <CardHeader className="pb-3">
                                 <CardTitle className="text-xl font-extrabold text-slate-900 dark:text-slate-100">Latest Payments</CardTitle>
                             </CardHeader>
