@@ -151,6 +151,14 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  useEffect(() => {
+    const sessions = data?.feeBarChart?.filters?.sessions || [];
+    if (sessionFilter === "ALL") return;
+    if (sessions.length === 0) return;
+    const exists = sessions.some((s) => s.name === sessionFilter);
+    if (!exists) setSessionFilter("ALL");
+  }, [data?.feeBarChart?.filters?.sessions, sessionFilter]);
+
   const chartMax = Math.max(
     1,
     ...(data?.courseFeeOverview || []).map((c) => Math.max(c.collected, c.pending, c.overdue))
@@ -158,35 +166,26 @@ export default function DashboardPage() {
 
   const barSource = data?.feeBarChart;
 
-  const fixedCourses = [
-    { key: "B.A. Arts", label: "B.A. Arts" },
-    { key: "B.Sc. Math", label: "B.Sc. Math" },
-    { key: "B.Sc. Bio", label: "B.Sc. Bio" },
-    { key: "B Ed.", label: "B Ed." },
-    { key: "BCA", label: "BCA" },
-  ];
-
-  const normalize = (s: string) => (s || "").toLowerCase().replace(/\s+/g, " ").trim();
-
   const barRows = (() => {
     if (!barSource) return [] as any[];
 
     const matrix = barSource.matrix || [];
     const sessionSelected = sessionFilter !== "ALL" ? sessionFilter : null;
 
+    const courses = barSource.filters?.courses || [];
     const pickFrom = sessionSelected ? matrix.filter((m) => m.sessionName === sessionSelected) : [];
 
-    return fixedCourses.map((c) => {
+    return courses.map((c) => {
       const m = sessionSelected
-        ? pickFrom.find((x) => normalize(x.courseName) === normalize(c.key))
-        : (barSource.byCourse || []).find((x) => normalize(x.courseName) === normalize(c.key));
+        ? pickFrom.find((x) => x.courseCode === c.code)
+        : (barSource.byCourse || []).find((x) => x.courseCode === c.code);
 
       return {
-        id: c.key,
+        id: c.code,
         mode: "COURSE" as const,
-        label: c.label,
-        courseName: c.key,
-        courseCode: m?.courseCode || "",
+        label: c.code,
+        courseName: c.name,
+        courseCode: c.code,
         collected: m?.collected || 0,
         pending: m?.pending || 0,
         overdue: m?.overdue || 0,
@@ -467,15 +466,15 @@ export default function DashboardPage() {
                             <div className="h-8" />
                           </div>
 
-                              <div className="flex h-[220px] sm:h-[240px] flex-col">
+                          <div className="flex h-[220px] sm:h-[240px] flex-col">
                             <div className="relative flex-1">
                               <div className="absolute bottom-0 left-0 right-0 border-t border-slate-200 dark:border-slate-800" />
 
                               <div
-                                className="grid h-full items-end gap-5"
-                                style={{ gridTemplateColumns: `repeat(${Math.min(stackedRows.length, 12)}, minmax(0, 1fr))` }}
+                                className="grid h-full items-end gap-3"
+                                style={{ gridTemplateColumns: `repeat(${Math.max(1, Math.min(stackedRows.length, 10))}, minmax(0, 1fr))` }}
                               >
-                                {stackedRows.slice(0, 5).map((r) => {
+                                {stackedRows.map((r) => {
                                   const hCollected = Math.round(percent(r.collected, barMax) * 100);
                                   const hPending = Math.round(percent(r.pendingNonOverdue, barMax) * 100);
                                   const hOverdue = Math.round(percent(r.overdue, barMax) * 100);
@@ -501,9 +500,9 @@ export default function DashboardPage() {
 
                             <div
                               className="grid items-start gap-5 pt-2"
-                              style={{ gridTemplateColumns: `repeat(${Math.min(stackedRows.length, 12)}, minmax(0, 1fr))` }}
+                              style={{ gridTemplateColumns: `repeat(${stackedRows.length || 1}, minmax(0, 1fr))` }}
                             >
-                              {stackedRows.slice(0, 5).map((r) => {
+                              {stackedRows.map((r) => {
                                 const xLabel = r.courseName || r.label;
                                 return (
                                   <div key={`${r.id}-label`} className="flex justify-center">

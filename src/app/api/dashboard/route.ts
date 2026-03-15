@@ -180,6 +180,8 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
             totalCourses,
             paymentsAgg,
             paymentsByMode,
+            courses,
+            sessions,
             ledgers,
             latestPayments,
             activeSession,
@@ -189,6 +191,16 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
             prisma.course.count({ where: { isDeleted: false } }),
             prisma.payment.aggregate({ _sum: { amount: true } }),
             prisma.payment.groupBy({ by: ["paymentMode"], _sum: { amount: true } }),
+            prisma.course.findMany({
+                where: { isDeleted: false },
+                select: { code: true, name: true },
+                orderBy: { code: "asc" },
+            }),
+            prisma.session.findMany({
+                where: { isDeleted: false },
+                select: { name: true },
+                orderBy: { name: "asc" },
+            }),
             prisma.feeLedger.findMany({
                 select: {
                     id: true,
@@ -538,8 +550,8 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
                 bySession: Array.from(bySession.values()).sort((a, b) => b.collected - a.collected),
                 matrix: Array.from(matrix.values()),
                 filters: {
-                    courses: Array.from(courseIndex.values()).sort((a, b) => a.code.localeCompare(b.code)),
-                    sessions: Array.from(sessionIndex.values()).sort((a, b) => a.name.localeCompare(b.name)),
+                    courses: (courses || []).map((c) => ({ code: c.code, name: c.name })),
+                    sessions: (sessions || []).map((s) => ({ name: s.name })),
                 },
             },
         });
