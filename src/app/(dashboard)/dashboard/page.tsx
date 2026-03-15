@@ -334,7 +334,7 @@ export default function DashboardPage() {
 
         <div className="grid gap-6 lg:grid-cols-12">
           <div className="lg:col-span-8 space-y-6">
-            <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:h-[540px] flex flex-col">
+            <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 h-auto lg:h-[540px] flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between pb-4">
                 <div>
                   <CardTitle className="text-xl font-extrabold text-slate-900 dark:text-slate-100">Fee Collection Overview</CardTitle>
@@ -412,26 +412,28 @@ export default function DashboardPage() {
                     ) : null}
 
                     <div className="flex flex-col gap-3">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg ml-3 font-medium text-slate-600 dark:text-slate-300">Session:</span>
-                          <Select value={sessionFilter} onValueChange={setSessionFilter}>
-                            <SelectTrigger className="h-9 w-[180px] border-slate-200 bg-white text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
-                              <SelectValue placeholder="All Sessions" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="ALL">All Sessions</SelectItem>
-                              {(barSource?.filters?.sessions || []).map((s) => (
-                                <SelectItem key={s.name} value={s.name}>
-                                  {s.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-base font-medium text-slate-600 dark:text-slate-300">Session:</span>
+                          <div className="w-full sm:w-[210px]">
+                            <Select value={sessionFilter} onValueChange={setSessionFilter}>
+                              <SelectTrigger className="h-9 w-full border-slate-200 bg-white text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
+                                <SelectValue placeholder="All Sessions" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="ALL">All Sessions</SelectItem>
+                                {(barSource?.filters?.sessions || []).map((s) => (
+                                  <SelectItem key={s.name} value={s.name}>
+                                    {s.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-6 text-sm text-slate-500 dark:text-slate-400 p-3">
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500 dark:text-slate-400 p-3">
                         <div className="flex items-center gap-2">
                           <span className="inline-block h-4 w-4 rounded-sm bg-emerald-500" />
                           Collected
@@ -447,8 +449,8 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950 overflow-x-auto">
-                        <div className="grid gap-4 min-w-[520px]" style={{ gridTemplateColumns: "64px 1fr" }}>
-                          <div className="flex h-[240px] flex-col">
+                        <div className="grid gap-4 min-w-0 w-full" style={{ gridTemplateColumns: "64px minmax(0, 1fr)" }}>
+                          <div className="flex h-[220px] sm:h-[240px] flex-col">
                             <div className="relative flex-1">
                               {Array.from({ length: 6 }).map((_, i) => {
                                 const pct = i / 5;
@@ -465,7 +467,7 @@ export default function DashboardPage() {
                             <div className="h-8" />
                           </div>
 
-                          <div className="flex h-[240px] flex-col">
+                              <div className="flex h-[220px] sm:h-[240px] flex-col">
                             <div className="relative flex-1">
                               <div className="absolute bottom-0 left-0 right-0 border-t border-slate-200 dark:border-slate-800" />
 
@@ -505,7 +507,7 @@ export default function DashboardPage() {
                                 const xLabel = r.courseName || r.label;
                                 return (
                                   <div key={`${r.id}-label`} className="flex justify-center">
-                                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[90px]">{xLabel}</p>
+                                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[120px]">{xLabel}</p>
                                   </div>
                                 );
                               })}
@@ -552,7 +554,7 @@ export default function DashboardPage() {
           </div>
 
                     <div className="lg:col-span-4 space-y-6">
-                        <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:h-[540px] flex flex-col">
+                        <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 h-auto lg:h-[540px] flex flex-col">
                             <CardHeader className="pb-3">
                                 <CardTitle className="text-xl font-extrabold text-slate-900 dark:text-slate-100">Latest Payments</CardTitle>
                             </CardHeader>
@@ -602,8 +604,8 @@ export default function DashboardPage() {
                                 {loading ? (
                                     <Skeleton className="h-40 w-full rounded-xl" />
                                 ) : (
-                                    <div className="flex items-center justify-between gap-6">
-                                        <div className="relative h-28 w-28 shrink-0">
+                                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                        <div className="relative h-28 w-28 shrink-0 mx-auto md:mx-0">
                                             <div
                                                 className="h-28 w-28 rounded-full"
                                                 style={{
@@ -618,21 +620,21 @@ export default function DashboardPage() {
                                             </div>
                                         </div>
                                         <div className="flex-1 space-y-2 text-sm">
-                                            <div className="flex items-center justify-between">
+                                            <div className="flex items-center justify-between gap-2">
                                                 <div className="flex items-center gap-2 text-slate-400">
                                                     <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" />
                                                     Collected
                                                 </div>
                                                 <p className="font-bold text-emerald-300">{formatCurrency(data?.kpis.feesCollected || 0)}</p>
                                             </div>
-                                            <div className="flex items-center justify-between">
+                                            <div className="flex items-center justify-between gap-2">
                                                 <div className="flex items-center gap-2 text-slate-400">
                                                     <span className="h-2.5 w-2.5 rounded-sm bg-amber-500" />
                                                     Pending
                                                 </div>
                                                 <p className="font-bold text-amber-300">{formatCurrency(data?.kpis.pendingFees || 0)}</p>
                                             </div>
-                                            <div className="flex items-center justify-between">
+                                            <div className="flex items-center justify-between gap-2">
                                                 <div className="flex items-center gap-2 text-slate-400">
                                                     <span className="h-2.5 w-2.5 rounded-sm bg-rose-500" />
                                                     Overdue
