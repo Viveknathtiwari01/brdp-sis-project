@@ -119,17 +119,17 @@ export default function PaymentsPage() {
 
                 <Card className="shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <table className="min-w-[980px] w-full text-sm">
                             <thead>
-                                <tr className="border-b border-slate-200 bg-slate-100/80 dark:border-slate-700 dark:bg-slate-800/70">
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">S. No.</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Student</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Semester</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Amount</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Mode</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Fee Status</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Date</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Download</th>
+                                <tr className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/80 dark:border-slate-700 dark:bg-slate-800/70">
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">S. No.</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Student</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Semester</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Amount</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Mode</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Fee Status</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Date</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Download</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -148,10 +148,10 @@ export default function PaymentsPage() {
                                                 {(page - 1) * pageSize + idx + 1}
                                             </td>
                                             <td className="px-4 py-3">
-                                                <p className="font-medium text-slate-700 dark:text-slate-200">
+                                                <p className="font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap">
                                                     {payment.student.firstName} {payment.student.lastName}
                                                 </p>
-                                                <p className="text-xs text-slate-500">{payment.student.registrationNo}</p>
+                                                <p className="text-xs text-slate-500 whitespace-nowrap">{payment.student.registrationNo}</p>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <Badge variant="default">Sem {payment.feeLedger.semester}</Badge>

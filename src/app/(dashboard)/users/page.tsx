@@ -246,15 +246,15 @@ export default function UsersPage() {
 
                 <Card className="shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <table className="min-w-[980px] w-full text-sm">
                             <thead>
-                                <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">User</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Role</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Permissions</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Status</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Last Login</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Actions</th>
+                                <tr className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">User</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Role</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Permissions</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Status</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Last Login</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -269,13 +269,13 @@ export default function UsersPage() {
                                 ) : filteredUsers.map((u) => (
                                     <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                                         <td className="px-4 py-3">
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-3 min-w-0">
                                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                                                     {u.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                                                 </div>
-                                                <div>
-                                                    <p className="font-medium text-slate-700 dark:text-slate-200">{u.name}</p>
-                                                    <p className="text-xs text-slate-500">{u.email}</p>
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-slate-700 dark:text-slate-200 truncate max-w-[260px]">{u.name}</p>
+                                                    <p className="text-xs text-slate-500 truncate max-w-[260px]">{u.email}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -471,7 +471,7 @@ export default function UsersPage() {
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Create User</DialogTitle>
-                            <DialogDescription>Create a new Admin or Student account.</DialogDescription>
+                            {/* <DialogDescription>Create a new Admin or Student account.</DialogDescription> */}
                         </DialogHeader>
                         <form onSubmit={handleSubmit(onCreate)} className="space-y-5">
                             <div className="space-y-1.5">
@@ -491,7 +491,7 @@ export default function UsersPage() {
                                 <Select onValueChange={(v) => setValue("role", v as "ADMIN" | "STUDENT")}>
                                     <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="ADMIN">Admin</SelectItem>
+                                        {/* <SelectItem value="ADMIN">Admin</SelectItem> */}
                                         <SelectItem value="STUDENT">Student</SelectItem>
                                     </SelectContent>
                                 </Select>

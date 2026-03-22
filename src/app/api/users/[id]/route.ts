@@ -41,13 +41,31 @@ export const PUT = withRole("SYSTEM_ADMIN")(async (req: NextRequest, authUser, c
         const id = params?.id;
         if (!id) return apiError("User ID is required", 400);
 
+        const existing = await prisma.user.findUnique({
+            where: { id, isDeleted: false },
+            select: { id: true, role: true, email: true },
+        });
+        if (!existing) return apiError("User not found", 404);
+
         const body = await req.json();
         const { email: _email, password: _password, refreshToken: _refreshToken, ...allowed } = body || {};
 
         const updateData: Record<string, unknown> = {};
         if (typeof allowed.name === "string") updateData.name = allowed.name;
-        if (typeof allowed.isActive === "boolean") updateData.isActive = allowed.isActive;
-        if (typeof allowed.role === "string") updateData.role = allowed.role;
+
+        if (typeof allowed.role === "string") {
+            if (allowed.role === "SYSTEM_ADMIN") {
+                return apiError("SYSTEM_ADMIN role cannot be assigned", 400);
+            }
+            updateData.role = allowed.role;
+        }
+
+        if (typeof allowed.isActive === "boolean") {
+            if (existing.role === "SYSTEM_ADMIN" && allowed.isActive === false) {
+                return apiError("System Admin cannot be deactivated", 400);
+            }
+            updateData.isActive = allowed.isActive;
+        }
 
         const updated = await prisma.user.update({
             where: { id },

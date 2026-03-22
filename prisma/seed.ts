@@ -69,17 +69,31 @@ async function main() {
 
     // 2. Create System Admin
     console.log("👑 Creating System Admin...");
-    const adminPassword = await bcrypt.hash("Admin@123", 12);
-    const systemAdmin = await findOrCreate(
-        prisma.user as any,
-        { email: "admin@brdp.edu" },
-        {
+    const systemAdminEmail = "ashutoshvermabrdp@gmail.com";
+    const adminPassword = await bcrypt.hash("Ashutosh@2026Verma", 12);
+
+    await prisma.user.updateMany({
+        where: { role: "SYSTEM_ADMIN", email: { not: systemAdminEmail }, isDeleted: false },
+        data: { role: "ADMIN" },
+    });
+
+    const systemAdmin = await prisma.user.upsert({
+        where: { email: systemAdminEmail },
+        update: {
+            role: "SYSTEM_ADMIN",
+            password: adminPassword,
+            isActive: true,
+            isDeleted: false,
+        },
+        create: {
+            email: systemAdminEmail,
             password: adminPassword,
             name: "System Administrator",
             role: "SYSTEM_ADMIN",
-        }
-    ) as any;
-    console.log(`   ✅ System Admin: admin@brdp.edu / Admin@123\n`);
+            isActive: true,
+        },
+    });
+    console.log(`   ✅ System Admin: ${systemAdmin.email} / Ashutosh@2026Verma`);
 
     // 3. Create a sample course
     console.log("📚 Creating sample course...");
@@ -212,7 +226,7 @@ async function main() {
 
     // 7. Create a sample admin with permissions
     console.log("👤 Creating sample Admin...");
-    const demoAdminPassword = await bcrypt.hash("DemoAdmin@123", 12);
+    const demoAdminPassword = await bcrypt.hash("Admin@123", 12);
     const demoAdmin = await findOrCreate(
         prisma.user as any,
         { email: "demoadmin@brdp.edu" },
@@ -249,9 +263,9 @@ async function main() {
     console.log("🎉 Seed completed successfully!");
     console.log("═══════════════════════════════════════════");
     console.log("\n📌 Login Credentials:");
-    console.log("   System Admin: admin@brdp.edu / Admin@123");
-    console.log("   Demo Admin:   demoadmin@brdp.edu / DemoAdmin@123");
-    console.log("   Student:      student@brdp.edu / Student@123");
+    console.log(`System Admin: ${systemAdmin.email} / ${adminPassword}`);
+    console.log(`Demo Admin: ${demoAdmin.email} / Admin@123`);
+    console.log(`Student: ${studentUser.email} / Student@123`);
     console.log("");
 }
 

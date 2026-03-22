@@ -362,18 +362,18 @@ export default function StudentsPage() {
                 {/* Table */}
                 <Card className="shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <table className="min-w-[980px] w-full text-sm">
                             <thead>
-                                <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Student</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Reg. No</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Course</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Session</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Semester</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Status</th>
-                                    <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Enrolled</th>
+                                <tr className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Student</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Reg. No</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Course</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Session</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Semester</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Status</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Enrolled</th>
                                     {canUseActions && (
-                                        <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">Action</th>
+                                        <th className="whitespace-nowrap px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">Action</th>
                                     )}
                                 </tr>
                             </thead>
@@ -393,25 +393,25 @@ export default function StudentsPage() {
                                             className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
                                         >
                                             <td className="px-4 py-3">
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-3 min-w-0">
                                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                                                         {student.firstName[0]}{student.lastName[0]}
                                                     </div>
-                                                    <div>
-                                                        <p className="font-medium text-slate-700 dark:text-slate-200">
+                                                    <div className="min-w-0">
+                                                        <p className="font-medium text-slate-700 dark:text-slate-200 truncate">
                                                             {student.firstName} {student.lastName}
                                                         </p>
-                                                        <p className="text-xs text-slate-500">{student.user.email}</p>
+                                                        <p className="text-xs text-slate-500 truncate max-w-[260px]">{student.user.email}</p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
                                                 {student.registrationNo}
                                             </td>
-                                            <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                                            <td className="px-4 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
                                                 {student.course.name}
                                             </td>
-                                            <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                                            <td className="px-4 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
                                                 {student.session.name}
                                             </td>
                                             <td className="px-4 py-3">

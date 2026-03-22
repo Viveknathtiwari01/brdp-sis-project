@@ -427,7 +427,7 @@ function AppearanceSettings({ theme, setTheme }: { theme: string | undefined; se
             previewAccent: "bg-slate-100",
         },
         {
-            id: "dark",
+            id: "dark1",
             label: "Dark",
             icon: Moon,
             description: "Easy on the eyes in low light",
@@ -435,7 +435,7 @@ function AppearanceSettings({ theme, setTheme }: { theme: string | undefined; se
             previewAccent: "bg-slate-800",
         },
         {
-            id: "system",
+            id: "system1",
             label: "System",
             icon: Monitor,
             description: "Follows your device settings",
