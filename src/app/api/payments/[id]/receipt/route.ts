@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { withPermission, apiError } from "@/lib/auth/middleware";
+import prisma from "@/lib/prisma/client";
 import { PaymentService } from "@/lib/services/payment.service";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -216,7 +217,8 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             body: [
                 ["1", `Semester Fee (Sem ${payment.feeLedger.semester})`, `Rs. ${totalAmount.toFixed(0)}`],
                 ["2", `Paid Now (${payment.paymentMode}${payment.transactionId ? ` - ${payment.transactionId}` : ""})`, `Rs. ${paidAmount.toFixed(0)}`],
-                ["", "Total Fee Payable", `Rs. ${totalAmount.toFixed(0)}`],
+                // ["", "Total Fee Payable", `Rs. ${totalAmount.toFixed(0)}`],
+                ["", "Remaining Balance", `Rs. ${(totalAmount - paidAmount).toFixed(0)}`],
             ],
             columnStyles: {
                 0: { cellWidth: contentWidth * 0.10 },
@@ -233,6 +235,39 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         });
 
         const afterBreakdownY = (doc as any).lastAutoTable.finalY + 32;
+
+        const allLedgers = await prisma.feeLedger.findMany({
+            where: { studentId: payment.studentId },
+            select: { semester: true, totalAmount: true, paidAmount: true, dueDate: true },
+        });
+
+        const now = new Date();
+        const dueLedgers = allLedgers
+            .map((l) => ({
+                ...l,
+                paidAmount: Number(l.paidAmount),
+                totalAmount: Number(l.totalAmount),
+                remaining: Math.max(0, Number(l.totalAmount) - Number(l.paidAmount)),
+                dueDateObj: new Date(l.dueDate),
+            }))
+            .filter((l) => l.remaining > 0 && l.paidAmount > 0 && l.dueDateObj <= now)
+            .sort((a, b) => a.semester - b.semester);
+
+        const overallDueAmount = dueLedgers.reduce((sum, l) => sum + l.remaining, 0);
+
+        const paymentSummaryRows = dueLedgers.map((l) => [
+            `Sem ${l.semester}`,
+            formatDateCompact(l.dueDateObj),
+            "Due",
+            `Rs. ${l.remaining.toFixed(0)}`,
+        ]);
+
+        if (paymentSummaryRows.length === 0) {
+            paymentSummaryRows.push(["—", "—", "Overall Due Amount", "Rs. 0"]);
+        } else {
+            paymentSummaryRows.push(["", "", "Overall Due Amount", `Rs. ${overallDueAmount.toFixed(0)}`]);
+        }
+
         sectionTitle("Payment Summary", afterBreakdownY);
 
         autoTable(doc, {
@@ -249,16 +284,8 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             headStyles: { fillColor: colors.headFill, textColor: colors.slate900, fontStyle: "bold" },
             tableLineColor: colors.grid,
             tableLineWidth: 0.8,
-            head: [["Installment", "Date", "Mode", "Amount (Rs.)"]],
-            body: [
-                [
-                    "Installment-1",
-                    `${formatDateCompact(paidAt)} ${formatTime(paidAt)}`,
-                    payment.paymentMode,
-                    `Rs. ${paidAmount.toFixed(0)}`,
-                ],
-                ["Grand Total Paid", `Rs. ${paidAmount.toFixed(0)}`, "Remaining Balance", `Rs. ${remaining.toFixed(0)}`],
-            ],
+            head: [["Semester", "Due Date", "Status", "Amount (Rs.)"]],
+            body: paymentSummaryRows,
             columnStyles: {
                 0: { cellWidth: contentWidth * 0.28 },
                 1: { cellWidth: contentWidth * 0.24 },
@@ -266,7 +293,7 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
                 3: { cellWidth: contentWidth * 0.20, halign: "right" },
             },
             didParseCell: (data) => {
-                if (data.section === "body" && data.row.index === 1) {
+                if (data.section === "body" && data.row.index === paymentSummaryRows.length - 1) {
                     data.cell.styles.fontStyle = "bold";
                     data.cell.styles.fillColor = [248, 250, 252];
                 }
