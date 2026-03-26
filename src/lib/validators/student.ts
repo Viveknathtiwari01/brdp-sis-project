@@ -43,6 +43,10 @@ export const studentRegistrationSchema = z.object({
 
     // Academic Details
     courseId: z.string().min(1, "Course is required"),
+    currentSemester: z.coerce
+        .number({ error: "Semester is required" })
+        .int("Semester must be a whole number")
+        .min(1, "Semester must be at least 1"),
     sessionId: z.string().min(1, "Session is required"),
 
     // Initial Payment

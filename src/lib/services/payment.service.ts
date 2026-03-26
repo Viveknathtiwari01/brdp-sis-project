@@ -1,8 +1,20 @@
 import prisma from "@/lib/prisma/client";
-import { generateReceiptNumber } from "@/lib/utils";
 import type { PaymentInput } from "@/lib/validators/payment";
 
 export class PaymentService {
+    private static async nextReceiptNumber(tx: typeof prisma, paidAt: Date) {
+        const year = paidAt.getFullYear();
+        const counter = await (tx as any).receiptCounter.upsert({
+            where: { year },
+            create: { year, sequence: 1 },
+            update: { sequence: { increment: 1 } },
+            select: { sequence: true },
+        });
+
+        const seq = String(counter.sequence).padStart(4, "0");
+        return `BRDP_${year}_${seq}`;
+    }
+
     /**
      * Process a fee payment with full validation and ledger update.
      * Uses database transaction for consistency.
@@ -38,7 +50,7 @@ export class PaymentService {
             }
 
             // 3. Create payment record
-            const receiptNumber = generateReceiptNumber();
+            const receiptNumber = await PaymentService.nextReceiptNumber(tx as any, new Date());
             const payment = await tx.payment.create({
                 data: {
                     studentId: data.studentId,

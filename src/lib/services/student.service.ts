@@ -1,9 +1,22 @@
 import prisma from "@/lib/prisma/client";
 import { hashPassword } from "@/lib/auth/password";
-import { generateReceiptNumber } from "@/lib/utils";
+import { generateRegistrationNo } from "@/lib/utils";
 import type { StudentRegistrationInput } from "@/lib/validators/student";
 
 export class StudentService {
+    private static async nextReceiptNumber(tx: typeof prisma, paidAt: Date) {
+        const year = paidAt.getFullYear();
+        const counter = await (tx as any).receiptCounter.upsert({
+            where: { year },
+            create: { year, sequence: 1 },
+            update: { sequence: { increment: 1 } },
+            select: { sequence: true },
+        });
+
+        const seq = String(counter.sequence).padStart(4, "0");
+        return `BRDP_${year}_${seq}`;
+    }
+
     static async register(data: StudentRegistrationInput, createdBy: string) {
         // Check if email already exists
         const existingUser = await prisma.user.findUnique({
@@ -58,6 +71,7 @@ export class StudentService {
                     userId: user.id,
                     courseId: data.courseId,
                     sessionId: data.sessionId,
+                    currentSemester: data.currentSemester,
                     firstName: data.firstName,
                     lastName: data.lastName,
                     fatherName: data.fatherName,
@@ -107,7 +121,7 @@ export class StudentService {
                     throw new Error("Initial payment exceeds Semester 1 total fee");
                 }
 
-                const receiptNumber = generateReceiptNumber();
+                const receiptNumber = await StudentService.nextReceiptNumber(tx as any, new Date());
 
                 initialPaymentRecord = await tx.payment.create({
                     data: {

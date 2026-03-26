@@ -272,6 +272,16 @@ model Payment {
   @@map("payments")
 }
 
+model ReceiptCounter {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  year      Int      @unique
+  sequence  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("receipt_counters")
+}
+
 // ─────────────────────────────────────────────
 // AUDIT LOG
 // ─────────────────────────────────────────────

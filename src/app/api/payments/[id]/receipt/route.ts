@@ -4,6 +4,8 @@ import { PaymentService } from "@/lib/services/payment.service";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import QRCode from "qrcode";
+import fs from "fs";
+import path from "path";
 
 function formatDate(date: Date) {
     return date.toLocaleDateString("en-GB", {
@@ -96,6 +98,19 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const qrSize = 74;
         const qrX = pageWidth - contentRight - qrSize;
 
+        const logoPath = path.join(process.cwd(), "public", "logo.png");
+        const logoBuffer = fs.existsSync(logoPath) ? fs.readFileSync(logoPath) : null;
+        const logoDataUrl = logoBuffer
+            ? `data:image/png;base64,${logoBuffer.toString("base64")}`
+            : null;
+        const logoSize = 56;
+        const logoX = contentLeft;
+        const logoY = headerY - 16;
+
+        const headerLeft = contentLeft + (logoDataUrl ? logoSize + 14 : 0);
+        const headerRight = pageWidth - contentRight;
+        const headerCenterX = pageWidth / 2;
+
         const qrDataUrl = await QRCode.toDataURL(qrUrl, {
             errorCorrectionLevel: "M",
             margin: 0,
@@ -103,24 +118,31 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             color: { dark: "#002060", light: "#ffffff" },
         });
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.setTextColor(...colors.darkBlue);
-        doc.text("Digital Fee Receipt", pageWidth / 2, headerY, { align: "center" });
+        if (logoDataUrl) {
+            doc.addImage(logoDataUrl, "PNG", logoX, logoY, logoSize, logoSize);
+        }
 
-        doc.setFontSize(13.5);
-        doc.text(instituteName, pageWidth / 2, headerY + 22, { align: "center" });
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(20);
+        doc.setTextColor(...colors.darkBlue);
+        doc.text("Sri Bhupram Dharmeshwar Prasad", headerCenterX, headerY + 4, { align: "center" });
+        doc.text("Mahavidyalaya", headerCenterX, headerY + 22, { align: "center" });
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(...colors.slate900);
+        doc.text("Fee Receipt", headerCenterX, headerY + 40, { align: "center" });
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(10.5);
+        doc.setFontSize(13);
         doc.setTextColor(...colors.blue);
         instituteAddress.forEach((line, i) => {
-            doc.text(line, pageWidth / 2, headerY + 40 + i * 14, { align: "center" });
+            doc.text(line, headerCenterX, headerY + 58 + i * 13, { align: "center" });
         });
 
         doc.setDrawColor(...colors.grid);
         doc.setLineWidth(1);
-        const headerDividerY = headerY + 40 + instituteAddress.length * 14 + 10;
+        const headerDividerY = headerY + 58 + instituteAddress.length * 13 + 10;
         doc.line(contentLeft, headerDividerY, pageWidth - contentRight, headerDividerY);
 
         const sectionTitle = (title: string, y: number) => {
@@ -287,8 +309,9 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const pdfArrayBuffer = doc.output("arraybuffer");
         const pdfBuffer = Buffer.from(pdfArrayBuffer);
 
-        const studentStart = sanitizeFileName(payment.student.firstName || "student");
-        const fileName = sanitizeFileName(`${studentStart}_${payment.receiptNumber}-${formatDateCompact(paidAt)}.pdf`);
+        const studentFileName = sanitizeFileName(`${payment.student.firstName || "Student"}_${payment.student.lastName || ""}`);
+        const dateName = formatDateCompact(paidAt).replaceAll("-", "_");
+        const fileName = sanitizeFileName(`${studentFileName}_${dateName}.pdf`);
 
         return new NextResponse(pdfBuffer, {
             status: 200,

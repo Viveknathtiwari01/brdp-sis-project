@@ -249,6 +249,7 @@ export default function StudentsPage() {
                 twelfthYear: selectedStudent.twelfthYear,
                 twelfthPercentage: selectedStudent.twelfthPercentage,
                 twelfthStream: selectedStudent.twelfthStream,
+                currentSemester: selectedStudent.currentSemester,
                 courseId: selectedStudent.course?.id,
                 sessionId: selectedStudent.session?.id,
             };
@@ -666,6 +667,17 @@ export default function StudentsPage() {
                                             </SelectContent>
                                         </Select>
                                         {errors.courseId && <p className="text-xs text-red-500">{errors.courseId.message as string}</p>}
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <Label required>Semester</Label>
+                                        <Input
+                                            {...register("currentSemester")}
+                                            type="number"
+                                            min={1}
+                                            placeholder="1"
+                                            error={errors.currentSemester?.message}
+                                        />
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label required>Session</Label>
