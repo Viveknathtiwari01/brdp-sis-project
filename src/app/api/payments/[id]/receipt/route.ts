@@ -250,7 +250,7 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
                 remaining: Math.max(0, Number(l.totalAmount) - Number(l.paidAmount)),
                 dueDateObj: new Date(l.dueDate),
             }))
-            .filter((l) => l.remaining > 0 && l.paidAmount > 0 && l.dueDateObj <= now)
+            .filter((l) => l.remaining > 0 && l.paidAmount > 0)
             .sort((a, b) => a.semester - b.semester);
 
         const overallDueAmount = dueLedgers.reduce((sum, l) => sum + l.remaining, 0);
