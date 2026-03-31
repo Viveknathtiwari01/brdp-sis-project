@@ -93,42 +93,39 @@ async function main() {
             isActive: true,
         },
     });
-    console.log(`   ✅ System Admin: ${systemAdmin.email} / Ashutosh@2026Verma`);
 
     // 3. Create a sample course
     console.log("📚 Creating sample course...");
     const course = await findOrCreate(
         prisma.course as any,
-        { code: "BCA" },
+        { code: "BA" },
         {
-            name: "Bachelor of Computer Applications",
-            description: "Three-year undergraduate program in computer science and applications",
+            name: "Bachelor of Arts",
+            description: "Three-year undergraduate program in arts and humanities",
             duration: 3,
             totalSemesters: 6,
         }
     ) as any;
-    console.log(`   ✅ Course: ${course.name} (${course.code})\n`);
 
     // 4. Create a sample session
     console.log("📅 Creating sample session...");
     const existingSession = await prisma.session.findFirst({
-        where: { name: "2024-2025" },
+        where: { name: "2026-2029" },
     });
     const session = existingSession ?? await prisma.session.create({
         data: {
-            name: "2024-2025",
-            startDate: new Date("2024-07-01"),
-            endDate: new Date("2025-06-30"),
+            name: "2026-2029",
+            startDate: new Date("2026-07-01"),
+            endDate: new Date("2029-06-30"),
         },
     });
-    console.log(`   ✅ Session: ${session.name}\n`);
 
-    // 5. Create fee structure for BCA 2024-2025
+    // 5. Create fee structure for BA 2026-2029
     console.log("💰 Creating fee structure...");
     const feeStructures = [
-        { semester: 1, totalAmount: 25000, dueDate: new Date("2024-08-15") },
-        { semester: 2, totalAmount: 22000, dueDate: new Date("2025-01-15") },
-        { semester: 3, totalAmount: 22000, dueDate: new Date("2025-07-15") },
+        { semester: 1, totalAmount: 25000, dueDate: new Date("2026-08-15") },
+        { semester: 2, totalAmount: 22000, dueDate: new Date("2027-01-15") },
+        { semester: 3, totalAmount: 22000, dueDate: new Date("2027-07-15") },
         { semester: 4, totalAmount: 22000, dueDate: new Date("2026-01-15") },
         { semester: 5, totalAmount: 22000, dueDate: new Date("2026-07-15") },
         { semester: 6, totalAmount: 22000, dueDate: new Date("2027-01-15") },
@@ -155,17 +152,16 @@ async function main() {
             });
         }
     }
-    console.log(`   ✅ ${feeStructures.length} semester fee structures created\n`);
 
     // 6. Create a sample student
     console.log("🎓 Creating sample student...");
-    const studentPassword = await bcrypt.hash("Student@123", 12);
+    const studentPassword = await bcrypt.hash("Test@123", 12);
     const studentUser = await findOrCreate(
         prisma.user as any,
-        { email: "student@brdp.edu" },
+        { email: "Vivek@yopmail.com" },
         {
             password: studentPassword,
-            name: "Rahul Kumar",
+            name: "Raviraj Kumar Tiwari",
             role: "STUDENT",
         }
     ) as any;
@@ -180,13 +176,13 @@ async function main() {
                 userId: studentUser.id,
                 courseId: course.id,
                 sessionId: session.id,
-                firstName: "Rahul",
-                lastName: "Kumar",
+                firstName: "Raviraj Kumar",
+                lastName: "Tiwari",
                 fatherName: "Rajesh Kumar",
                 motherName: "Sunita Devi",
                 dateOfBirth: new Date("2003-05-15"),
                 gender: "Male",
-                phone: "9876543210",
+                phone: "6209464451",
                 address: "123 Main Street",
                 city: "Patna",
                 state: "Bihar",
@@ -196,9 +192,9 @@ async function main() {
                 tenthPercentage: 85.5,
                 twelfthBoard: "CBSE",
                 twelfthYear: 2021,
-                twelfthPercentage: 78.2,
+                twelfthPercentage: 82.2,
                 twelfthStream: "Science",
-                registrationNo: "BCA/2024/0001",
+                registrationNo: "BA/2026/0001",
                 currentSemester: 1,
             },
         });
@@ -216,56 +212,82 @@ async function main() {
                 },
             });
         }
-
-        console.log(`   ✅ Student: student@brdp.edu / Student@123`);
-        console.log(`   ✅ Registration No: BCA/2024/0001`);
-        console.log(`   ✅ 6 fee ledger entries created\n`);
     } else {
         console.log(`   ⚡ Student already exists, skipped.\n`);
     }
 
-    // 7. Create a sample admin with permissions
-    console.log("👤 Creating sample Admin...");
+    // 7. Create sample admins with permissions
+    console.log("👤 Creating sample Admins...");
     const demoAdminPassword = await bcrypt.hash("Admin@123", 12);
-    const demoAdmin = await findOrCreate(
+
+    // Sublogin 1
+    const demoAdmin1 = await findOrCreate(
         prisma.user as any,
-        { email: "demoadmin@brdp.edu" },
+        { email: "brdpdcsitapur@gmail.com" },
         {
             password: demoAdminPassword,
-            name: "Demo Admin",
+            name: "Sublogin 1",
             role: "ADMIN",
         }
     ) as any;
 
-    // Grant all permissions to demo admin
+    // Grant all permissions to demo admin 1
     const allPermissions = await prisma.permission.findMany();
     for (const perm of allPermissions) {
         const existingPerm = await prisma.adminPermission.findFirst({
             where: {
-                userId: demoAdmin.id,
+                userId: demoAdmin1.id,
                 permissionId: perm.id,
             },
         });
         if (!existingPerm) {
             await prisma.adminPermission.create({
                 data: {
-                    userId: demoAdmin.id,
+                    userId: demoAdmin1.id,
                     permissionId: perm.id,
                     grantedBy: systemAdmin.id,
                 },
             });
         }
     }
-    console.log(`   ✅ Demo Admin: demoadmin@brdp.edu / DemoAdmin@123`);
-    console.log(`   ✅ All permissions granted\n`);
 
+    // Sublogin 2
+    const demoAdmin2 = await findOrCreate(
+        prisma.user as any,
+        { email: "rakdm2017@gmail.com" },
+        {
+            password: demoAdminPassword,
+            name: "Sublogin 2",
+            role: "ADMIN",
+        }
+    ) as any;
+
+    // Grant all permissions to demo admin 2
+    for (const perm of allPermissions) {
+        const existingPerm = await prisma.adminPermission.findFirst({
+            where: {
+                userId: demoAdmin2.id,
+                permissionId: perm.id,
+            },
+        });
+        if (!existingPerm) {
+            await prisma.adminPermission.create({
+                data: {
+                    userId: demoAdmin2.id,
+                    permissionId: perm.id,
+                    grantedBy: systemAdmin.id,
+                },
+            });
+        }
+    }
     console.log("═══════════════════════════════════════════");
     console.log("🎉 Seed completed successfully!");
     console.log("═══════════════════════════════════════════");
     console.log("\n📌 Login Credentials:");
-    console.log(`System Admin: ${systemAdmin.email} / ${adminPassword}`);
-    console.log(`Demo Admin: ${demoAdmin.email} / Admin@123`);
-    console.log(`Student: ${studentUser.email} / Student@123`);
+    console.log(`System Admin: ${systemAdmin.email} / Ashutosh@2026Verma`);
+    console.log(`Sublogin 1 (Admin): ${demoAdmin1.email} / Admin@123`);
+    console.log(`Sublogin 2 (Admin): ${demoAdmin2.email} / Admin@123`);
+    console.log(`Student: ${studentUser.email} / Test@123`);
     console.log("");
 }
 
