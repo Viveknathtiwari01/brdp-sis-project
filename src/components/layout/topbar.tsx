@@ -30,10 +30,8 @@ type TopbarProps = {
 export function Topbar({ onMobileMenuClick }: TopbarProps) {
     const { user, logout } = useAuth();
     const router = useRouter();
-    const [avatarFailed, setAvatarFailed] = useState(false);
 
-    const avatarSeed = user?.email || user?.name || "user";
-    const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(avatarSeed)}&backgroundColor=1d4ed8&textColor=ffffff`;
+    const initials = user ? getInitials(user.name) : "?";
 
     const roleLabel: Record<string, string> = {
         SYSTEM_ADMIN: "System Admin",
@@ -93,21 +91,9 @@ export function Topbar({ onMobileMenuClick }: TopbarProps) {
                     <DropdownMenuTrigger asChild>
                         <button className="flex items-center gap-3 rounded-full pl-1 pr-2 py-1.5 hover:bg-slate-100 transition-colors dark:hover:bg-slate-900">
                             <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-blue-800 text-sm font-bold text-white shadow-sm">
-                                {user && !avatarFailed ? (
-                                    <img
-                                        src={avatarUrl}
-                                        alt={user.name}
-                                        className="h-full w-full object-cover"
-                                        onError={(e) => {
-                                            setAvatarFailed(true);
-                                        }}
-                                    />
-                                ) : null}
-                                {(!user || avatarFailed) && (
-                                    <span className="absolute inset-0 flex items-center justify-center">
-                                        {user ? getInitials(user.name) : "?"}
-                                    </span>
-                                )}
+                                <span className="absolute inset-0 flex items-center justify-center">
+                                    {initials}
+                                </span>
                             </div>
                             <div className="hidden md:flex flex-col items-start text-left">
                                 <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">

@@ -40,12 +40,11 @@ export function generateRegistrationNo(courseCode: string, year: number, count: 
 }
 
 export function getInitials(name: string): string {
-    return name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 0) return "";
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    // First letter of first name + first letter of last name
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
 export function sleep(ms: number): Promise<void> {
