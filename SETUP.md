@@ -6,7 +6,8 @@
 npm install
 ```
 
-## 2) Configure Database (MongoDB Atlas)
+
+## 2) Configure Database (MongoDB Atlas..) 
 
 Create/Update `.env` in the project root:
 
