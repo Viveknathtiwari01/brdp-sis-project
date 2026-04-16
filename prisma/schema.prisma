@@ -160,7 +160,6 @@ model CourseFeeStructure {
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, sessionId, semester])
-  @@index([courseId, sessionId])
   @@map("course_fee_structures")
 }
 
