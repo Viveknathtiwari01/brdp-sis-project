@@ -202,6 +202,9 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
                 orderBy: { name: "asc" },
             }),
             prisma.feeLedger.findMany({
+                where: {
+                    student: { is: {} },
+                },
                 select: {
                     id: true,
                     totalAmount: true,
@@ -225,6 +228,10 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
                 take: 50,
             }),
             prisma.payment.findMany({
+                where: {
+                    student: { is: {} },
+                    feeLedger: { is: {} },
+                },
                 select: {
                     id: true,
                     amount: true,
@@ -246,6 +253,10 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
             }),
             prisma.session.findFirst({ where: { isDeleted: false, isActive: true }, select: { name: true } }),
             prisma.payment.findMany({
+                where: {
+                    student: { is: {} },
+                    feeLedger: { is: {} },
+                },
                 select: {
                     amount: true,
                     student: {

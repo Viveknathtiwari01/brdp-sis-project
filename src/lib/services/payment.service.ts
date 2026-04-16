@@ -120,7 +120,10 @@ export class PaymentService {
         const limit = params.limit || 10;
         const skip = (page - 1) * limit;
 
-        const where: Record<string, unknown> = {};
+        const where: Record<string, unknown> = {
+            student: { is: {} },
+            feeLedger: { is: {} },
+        };
 
         if (params.studentId) where.studentId = params.studentId;
         if (params.feeLedgerId) where.feeLedgerId = params.feeLedgerId;
