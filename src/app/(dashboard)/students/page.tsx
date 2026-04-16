@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ImageUpload } from "@/components/ui/image-upload";
+// import { ImageUpload } from "@/components/ui/image-upload";
 import { COLLEGE_CONFIG } from "@/lib/college-config";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
