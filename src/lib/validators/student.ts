@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CollegeCode } from "@/lib/college-config";
 
 export const studentRegistrationSchema = z.object({
     // Personal Details
@@ -17,6 +18,8 @@ export const studentRegistrationSchema = z.object({
     city: z.string().min(2, "City is required"),
     state: z.string().min(2, "State is required"),
     pincode: z.string().regex(/^\d{6}$/, "Invalid pincode"),
+    profileImage: z.string().optional(),
+    collegeCode: z.enum(["BRDP", "RAK"]).default("BRDP"),
 
     // Educational Details
     tenthBoard: z.string().min(2, "10th board is required"),

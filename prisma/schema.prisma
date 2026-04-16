@@ -169,44 +169,36 @@ model CourseFeeStructure {
 // ─────────────────────────────────────────────
 
 model Student {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId           String   @unique @db.ObjectId
-  courseId          String   @db.ObjectId
-  sessionId        String   @db.ObjectId
-
-  // Personal Details
-  firstName        String
-  lastName         String
-  fatherName       String
-  motherName       String
-  dateOfBirth      DateTime
-  gender           String
-  phone            String
-  address          String
-  city             String
-  state            String
-  pincode          String
-  photo            String?
-
-  // Educational Details
-  tenthBoard       String
-  tenthYear        Int
-  tenthPercentage  Float
-  twelfthBoard     String
-  twelfthYear      Int
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String     @unique @map("_userId") @db.ObjectId
+  courseId      String     @db.ObjectId
+  sessionId     String     @db.ObjectId
+  registrationNo String     @unique
+  rollNo        String
+  firstName     String
+  lastName      String
+  fatherName    String
+  motherName    String
+  dateOfBirth   DateTime
+  gender        String
+  phone         String
+  address       String
+  city          String
+  state         String
+  pincode       String
+  tenthBoard    String
+  tenthYear     Int
+  tenthPercentage Float
+  twelfthBoard  String
+  twelfthYear   Int
   twelfthPercentage Float
-  twelfthStream    String
-
-  // Academic Details
-  rollNo           String?
-  registrationNo   String   @unique
-  currentSemester  Int      @default(1)
-  admissionDate    DateTime @default(now())
-
-  isActive         Boolean  @default(true)
-  isDeleted        Boolean  @default(false)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  twelfthStream  String
+  currentSemester Int       @default(1)
+  isActive      Boolean    @default(true)
+  isDeleted     Boolean    @default(false)
+  collegeCode   String     @default("BRDP")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   course    Course      @relation(fields: [courseId], references: [id])

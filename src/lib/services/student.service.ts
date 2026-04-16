@@ -92,6 +92,7 @@ export class StudentService {
                     twelfthStream: data.twelfthStream,
                     rollNo: data.rollNo,
                     registrationNo: data.registrationNo,
+                    collegeCode: data.collegeCode,
                 },
             });
 

@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { COLLEGE_CONFIG } from "@/lib/college-config";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { studentRegistrationSchema, type StudentRegistrationInput } from "@/lib/validators/student";
@@ -521,6 +523,19 @@ export default function StudentsPage() {
                             <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
                                 <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Personal Details</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label required>College</Label>
+                                        <Select onValueChange={(v) => setValue("collegeCode", v as "BRDP" | "RAK")}>
+                                            <SelectTrigger><SelectValue placeholder="Select college" /></SelectTrigger>
+                                            <SelectContent>
+                                                {Object.entries(COLLEGE_CONFIG).map(([code, config]) => (
+                                                    <SelectItem key={code} value={code}>{config.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.collegeCode && <p className="text-xs text-red-500">{errors.collegeCode.message as string}</p>}
+                                    </div>
+
                                     <div className="space-y-1.5">
                                         <Label required>Registration Number</Label>
                                         <Input {...register("registrationNo")} error={errors.registrationNo?.message} />

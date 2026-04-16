@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { withPermission, apiError } from "@/lib/auth/middleware";
 import prisma from "@/lib/prisma/client";
 import { PaymentService } from "@/lib/services/payment.service";
-import { jsPDF } from "jspdf";
+import { COLLEGE_CONFIG } from "@/lib/college-config";
+import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import QRCode from "qrcode";
 import fs from "fs";
@@ -57,7 +58,11 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const paidAt = new Date(payment.paidAt);
         const dueDate = new Date(payment.feeLedger.dueDate);
 
-        const instituteName = "Sri Bhupram Dharmeshwar Prasad Mahavidyalaya";
+        // Get college config based on student's college code
+        const collegeCode = (payment.student as any)?.collegeCode || "BRDP";
+        const college = COLLEGE_CONFIG[collegeCode as keyof typeof COLLEGE_CONFIG] || COLLEGE_CONFIG.BRDP;
+
+        const instituteName = college.name;
         const instituteAddress = [
             "Village Mohiuddinpur Sahroi, Post: Sitapur,",
             "Block: Ailiya, District: Sitapur, Uttar Pradesh - 261001",
@@ -95,11 +100,12 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         doc.rect(outerMargin, outerMargin, pageWidth - outerMargin * 2, pageHeight - outerMargin * 2);
 
         const headerY = outerMargin + 24;
-        const qrUrl = "http://brdpdcsitapur.com/admissions/apply/";
+        // const qrUrl = "http://brdpdcsitapur.com/admissions/apply/";
+        const qrUrl = "Fee Receipt - No Redirect";
         const qrSize = 74;
         const qrX = pageWidth - contentRight - qrSize;
 
-        const logoPath = path.join(process.cwd(), "public", "logo.png");
+        const logoPath = path.join(process.cwd(), "public", college.logoPath.replace(/^\//, ""));
         const logoBuffer = fs.existsSync(logoPath) ? fs.readFileSync(logoPath) : null;
         const logoDataUrl = logoBuffer
             ? `data:image/png;base64,${logoBuffer.toString("base64")}`
@@ -126,8 +132,13 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(20);
         doc.setTextColor(...colors.darkBlue);
-        doc.text("Sri Bhupram Dharmeshwar Prasad", headerCenterX, headerY + 4, { align: "center" });
-        doc.text("Mahavidyalaya", headerCenterX, headerY + 22, { align: "center" });
+        // Split college name properly for two lines
+        const nameParts = instituteName.split(" ");
+        const firstLine = nameParts.slice(0, 4).join(" "); // First 4 words
+        const secondLine = nameParts.slice(4).join(" "); // Remaining words
+        
+        doc.text(firstLine, headerCenterX, headerY + 4, { align: "center" });
+        doc.text(secondLine, headerCenterX, headerY + 22, { align: "center" });
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
