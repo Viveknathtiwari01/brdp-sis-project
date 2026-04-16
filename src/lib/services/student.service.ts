@@ -53,7 +53,7 @@ export class StudentService {
 
         const hashedPassword = await hashPassword(data.password);
 
-        // Use transaction for atomicity
+        // Use transaction for critical operations only
         const result = await prisma.$transaction(async (tx) => {
             // 1. Create user
             const user = await tx.user.create({
@@ -96,37 +96,57 @@ export class StudentService {
                 },
             });
 
-            // 3. Create fee ledger entries for all semesters
-            const feeLedgerEntries = [];
-            for (const fs of feeStructures) {
-                const ledgerEntry = await tx.feeLedger.create({
+            // 5. Audit log
+            await tx.auditLog.create({
+                data: {
+                    userId: createdBy,
+                    action: "CREATE",
+                    module: "Student",
+                    details: `Registered student: ${data.firstName} ${data.lastName} (${data.registrationNo})`,
+                },
+            });
+
+            return {
+                student: {
+                    ...student,
+                    user: { id: user.id, email: user.email, name: user.name },
+                },
+            };
+        });
+
+        // 3. Create fee ledger entries outside transaction (faster)
+        const feeLedgerEntries = await Promise.all(
+            feeStructures.map(fs =>
+                prisma.feeLedger.create({
                     data: {
-                        studentId: student.id,
+                        studentId: result.student.id,
                         semester: fs.semester,
                         totalAmount: fs.totalAmount,
                         paidAmount: 0,
                         dueDate: fs.dueDate,
                         status: "PENDING",
                     },
-                });
-                feeLedgerEntries.push(ledgerEntry);
+                })
+            )
+        );
+
+        // 4. Apply initial payment to Semester 1 if provided
+        let initialPaymentRecord = null;
+        if (data.initialPayment && data.initialPayment > 0) {
+            const sem1Ledger = feeLedgerEntries[0];
+            if (!sem1Ledger) throw new Error("Semester 1 fee ledger not found");
+
+            if (data.initialPayment > sem1Ledger.totalAmount) {
+                throw new Error("Initial payment exceeds Semester 1 total fee");
             }
 
-            // 4. Apply initial payment to Semester 1 if provided
-            let initialPaymentRecord = null;
-            if (data.initialPayment && data.initialPayment > 0) {
-                const sem1Ledger = feeLedgerEntries[0];
-                if (!sem1Ledger) throw new Error("Semester 1 fee ledger not found");
+            const receiptNumber = await StudentService.nextReceiptNumber(prisma, new Date());
 
-                if (data.initialPayment > sem1Ledger.totalAmount) {
-                    throw new Error("Initial payment exceeds Semester 1 total fee");
-                }
-
-                const receiptNumber = await StudentService.nextReceiptNumber(tx as any, new Date());
-
-                initialPaymentRecord = await tx.payment.create({
+            initialPaymentRecord = await prisma.$transaction(async (tx) => {
+                // Create payment
+                const payment = await tx.payment.create({
                     data: {
-                        studentId: student.id,
+                        studentId: result.student.id,
                         feeLedgerId: sem1Ledger.id,
                         amount: data.initialPayment,
                         paymentMode: data.paymentMode || "CASH",
@@ -148,27 +168,16 @@ export class StudentService {
                         status: newStatus,
                     },
                 });
-            }
 
-            // 5. Audit log
-            await tx.auditLog.create({
-                data: {
-                    userId: createdBy,
-                    action: "CREATE",
-                    module: "Student",
-                    details: `Registered student: ${data.firstName} ${data.lastName} (${data.registrationNo})`,
-                },
+                return payment;
             });
+        }
 
-            return {
-                student: {
-                    ...student,
-                    user: { id: user.id, email: user.email, name: user.name },
-                },
-                feeLedger: feeLedgerEntries,
-                initialPayment: initialPaymentRecord,
-            };
-        });
+        return {
+            student: result.student,
+            feeLedger: feeLedgerEntries,
+            initialPayment: initialPaymentRecord,
+        };
 
         return result;
     }
