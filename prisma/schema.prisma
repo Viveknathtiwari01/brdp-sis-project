@@ -207,7 +207,6 @@ model Student {
 
   @@index([courseId, sessionId])
   @@index([isActive, isDeleted])
-  @@index([registrationNo])
   @@map("students")
 }
 
