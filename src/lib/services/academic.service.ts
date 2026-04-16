@@ -1,12 +1,10 @@
-import { PrismaClient } from "@prisma/client";
 import prisma from "@/lib/prisma/client";
-import { cacheService } from "./cache.service";
 import type { CourseInput, SessionInput, FeeStructureInput } from "@/lib/validators/academic";
 
 export class AcademicService {
     // ── Course CRUD ──────────────────────────────────────────
     static async createCourse(data: CourseInput, createdBy: string) {
-        const existing = await cacheService.get(`course:${data.code}`);
+        const existing = await prisma.course.findUnique({ where: { code: data.code } });
         if (existing) throw new Error("Course code already exists");
 
         const course = await prisma.course.create({ data });
@@ -52,7 +50,10 @@ export class AcademicService {
     }
 
     static async getAllCourses() {
-        return cacheService.getCourses();
+        return prisma.course.findMany({
+            where: { isDeleted: false },
+            orderBy: { name: "asc" },
+        });
     }
 
     static async getCourseById(id: string) {
@@ -120,7 +121,10 @@ export class AcademicService {
     }
 
     static async getAllSessions() {
-        return cacheService.getSessions();
+        return prisma.session.findMany({
+            where: { isDeleted: false },
+            orderBy: { startDate: "desc" },
+        });
     }
 
     static async getSessionById(id: string) {
