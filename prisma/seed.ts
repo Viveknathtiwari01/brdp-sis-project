@@ -179,7 +179,6 @@ async function main() {
                 courseId: course.id,
                 sessionId: session.id,
                 fatherName: "Rajesh Kumar",
-                phone: "6209464451",
                 address: "123 Main Street, Patna, Bihar - 800001",
                 currentSemester: 1,
                 collegeCode: "BRDP",
