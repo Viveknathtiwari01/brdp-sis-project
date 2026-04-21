@@ -95,7 +95,20 @@ export default function PaymentsPage() {
             document.body.appendChild(a);
             a.click();
             a.remove();
-            window.URL.revokeObjectURL(url);
+
+            // Open print dialog reliably using an iframe
+            const iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            
+            iframe.onload = () => {
+                setTimeout(() => {
+                    iframe.contentWindow?.focus();
+                    iframe.contentWindow?.print();
+                    // Optional: window.URL.revokeObjectURL(url);
+                }, 500);
+            };
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Failed to download receipt");
         } finally {

@@ -136,24 +136,37 @@ export default function FeesPage() {
                 },
             });
             if (!res.ok) throw new Error("Failed to fetch receipt");
+            
+            const contentDisposition = res.headers.get("content-disposition") || "";
+            const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+            const fileName = fileNameMatch?.[1] || `receipt_${paymentId}.pdf`;
+
             const blob = await res.blob();
             const url = window.URL.createObjectURL(blob);
             
             // Auto-save (Download)
             const a = document.createElement("a");
             a.href = url;
-            a.download = `receipt_${paymentId}.pdf`;
+            a.download = fileName;
             document.body.appendChild(a);
             a.click();
             a.remove();
 
-            // Open print dialog
-            const printWindow = window.open(url);
-            if (printWindow) {
-                printWindow.onload = () => {
-                    printWindow.print();
-                };
-            }
+            // Open print dialog reliably using an iframe
+            const iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            
+            // Give the PDF a moment to load in the iframe before printing
+            iframe.onload = () => {
+                setTimeout(() => {
+                    iframe.contentWindow?.focus();
+                    iframe.contentWindow?.print();
+                    // Optional: remove iframe after printing
+                    // setTimeout(() => iframe.remove(), 1000);
+                }, 500);
+            };
         } catch {
             toast.error("Failed to auto-download receipt. You can download it manually from the history.");
         }
