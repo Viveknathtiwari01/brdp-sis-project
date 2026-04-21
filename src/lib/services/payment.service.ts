@@ -87,7 +87,7 @@ export class PaymentService {
                     userId: createdBy,
                     action: "PAYMENT",
                     module: "Payment",
-                    details: `Payment of ₹${data.amount} received for ${ledger.student.firstName} ${ledger.student.lastName} (Sem ${ledger.semester}). Receipt: ${receiptNumber}`,
+                    details: `Payment of ₹${data.amount} received for ${ledger.student.fullName} (Sem ${ledger.semester}). Receipt: ${receiptNumber}`,
                 },
             });
 
@@ -143,9 +143,8 @@ export class PaymentService {
                     student: {
                         select: {
                             id: true,
-                            firstName: true,
-                            lastName: true,
-                            registrationNo: true,
+                            fullName: true,
+                            rollNo: true,
                         },
                     },
                     feeLedger: {

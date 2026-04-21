@@ -210,13 +210,18 @@ export default function UsersPage() {
         STUDENT: "default",
     };
 
-    if (currentUser?.role !== "SYSTEM_ADMIN") {
+    const isSuperAdmin = currentUser?.email === "ashutoshvermabrdp@gmail.com";
+
+    if (!isSuperAdmin) {
         return (
             <DashboardShell>
                 <Card>
                     <CardContent className="flex flex-col items-center py-16">
                         <Shield className="h-10 w-10 text-slate-300 mb-3" />
-                        <p className="text-sm text-slate-500">Access restricted to System Administrators</p>
+                        <p className="text-sm text-slate-500 text-center">
+                            Access restricted to the primary System Administrator<br />
+                            <span className="text-xs opacity-75">(ashutoshvermabrdp@gmail.com)</span>
+                        </p>
                     </CardContent>
                 </Card>
             </DashboardShell>
@@ -491,7 +496,7 @@ export default function UsersPage() {
                                 <Select onValueChange={(v) => setValue("role", v as "ADMIN" | "STUDENT")}>
                                     <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                                     <SelectContent>
-                                        {/* <SelectItem value="ADMIN">Admin</SelectItem> */}
+                                        <SelectItem value="ADMIN">Sub-Admin</SelectItem>
                                         <SelectItem value="STUDENT">Student</SelectItem>
                                     </SelectContent>
                                 </Select>

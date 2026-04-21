@@ -1,6 +1,4 @@
-import prisma from "@/lib/prisma/client";
 import { hashPassword } from "@/lib/auth/password";
-import { generateRegistrationNo } from "@/lib/utils";
 import type { StudentRegistrationInput } from "@/lib/validators/student";
 
 export class StudentService {
@@ -23,12 +21,6 @@ export class StudentService {
             where: { email: data.email },
         });
         if (existingUser) throw new Error("Email already registered");
-
-        const existingRegistrationNo = await prisma.student.findUnique({
-            where: { registrationNo: data.registrationNo },
-            select: { id: true },
-        });
-        if (existingRegistrationNo) throw new Error("Registration number already exists");
 
         // Get course & session info
         const course = await prisma.course.findUnique({
@@ -60,7 +52,7 @@ export class StudentService {
                 data: {
                     email: data.email,
                     password: hashedPassword,
-                    name: `${data.firstName} ${data.lastName}`,
+                    name: data.fullName,
                     role: "STUDENT",
                 },
             });
@@ -72,26 +64,10 @@ export class StudentService {
                     courseId: data.courseId,
                     sessionId: data.sessionId,
                     currentSemester: data.currentSemester,
-                    firstName: data.firstName,
-                    lastName: data.lastName,
+                    fullName: data.fullName,
                     fatherName: data.fatherName,
-                    motherName: data.motherName,
-                    dateOfBirth: new Date(data.dateOfBirth),
-                    gender: data.gender,
-                    phone: data.phone,
                     address: data.address,
-                    city: data.city,
-                    state: data.state,
-                    pincode: data.pincode,
-                    tenthBoard: data.tenthBoard,
-                    tenthYear: data.tenthYear,
-                    tenthPercentage: data.tenthPercentage,
-                    twelfthBoard: data.twelfthBoard,
-                    twelfthYear: data.twelfthYear,
-                    twelfthPercentage: data.twelfthPercentage,
-                    twelfthStream: data.twelfthStream,
                     rollNo: data.rollNo,
-                    registrationNo: data.registrationNo,
                     collegeCode: data.collegeCode,
                 },
             });
@@ -102,7 +78,7 @@ export class StudentService {
                     userId: createdBy,
                     action: "CREATE",
                     module: "Student",
-                    details: `Registered student: ${data.firstName} ${data.lastName} (${data.registrationNo})`,
+                    details: `Registered student: ${data.fullName} (${data.rollNo})`,
                 },
             });
 
@@ -202,10 +178,8 @@ export class StudentService {
 
         if (params.search) {
             where.OR = [
-                { firstName: { contains: params.search, mode: "insensitive" } },
-                { lastName: { contains: params.search, mode: "insensitive" } },
-                { registrationNo: { contains: params.search, mode: "insensitive" } },
-                { phone: { contains: params.search } },
+                { fullName: { contains: params.search, mode: "insensitive" } },
+                { rollNo: { contains: params.search, mode: "insensitive" } },
             ];
         }
 
@@ -287,24 +261,7 @@ export class StudentService {
 
         if (!existing) throw new Error("Student not found");
 
-        if (data.registrationNo) {
-            const regExists = await prisma.student.findFirst({
-                where: {
-                    registrationNo: data.registrationNo,
-                    id: { not: id },
-                },
-                select: { id: true },
-            });
-            if (regExists) throw new Error("Registration number already exists");
-        }
-
         const updateData: Record<string, unknown> = { ...data };
-        if (data.dateOfBirth) updateData.dateOfBirth = new Date(data.dateOfBirth);
-
-        const fullName =
-            data.firstName || data.lastName
-                ? `${data.firstName ?? existing.firstName} ${data.lastName ?? existing.lastName}`.trim()
-                : null;
 
         const result = await prisma.$transaction(async (tx) => {
             const student = await tx.student.update({
@@ -317,10 +274,10 @@ export class StudentService {
                 },
             });
 
-            if (fullName) {
+            if (data.fullName) {
                 await tx.user.update({
                     where: { id: student.userId },
-                    data: { name: fullName },
+                    data: { name: data.fullName },
                 });
             }
 
@@ -329,7 +286,7 @@ export class StudentService {
                     userId: updatedBy,
                     action: "UPDATE",
                     module: "Student",
-                    details: `Updated student: ${student.firstName} ${student.lastName} (${student.registrationNo})`,
+                    details: `Updated student: ${student.fullName} (${student.rollNo})`,
                 },
             });
 
@@ -342,7 +299,7 @@ export class StudentService {
     static async softDelete(id: string, deletedBy: string) {
         const existing = await prisma.student.findUnique({
             where: { id, isDeleted: false },
-            select: { id: true, userId: true, registrationNo: true },
+            select: { id: true, userId: true, rollNo: true },
         });
         if (!existing) throw new Error("Student not found");
 
@@ -355,7 +312,7 @@ export class StudentService {
                     userId: deletedBy,
                     action: "DELETE",
                     module: "Student",
-                    details: `Soft-deleted student ID: ${id} (${existing.registrationNo})`,
+                    details: `Soft-deleted student ID: ${id} (${existing.rollNo})`,
                 },
             });
         });

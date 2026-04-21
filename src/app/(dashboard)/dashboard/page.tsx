@@ -46,7 +46,7 @@ type DashboardPayload = {
     paymentMode: string;
     student: {
       name: string;
-      registrationNo: string;
+      rollNo: string;
       course?: { name: string; code: string };
     };
     semester: number;
@@ -55,7 +55,7 @@ type DashboardPayload = {
     id: string;
     student: {
       name: string;
-      registrationNo: string;
+      rollNo: string;
       course?: { name: string; code: string };
     };
     totalAmount: number;
@@ -683,7 +683,7 @@ export default function DashboardPage() {
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
-                                            <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Reg. No</th>
+                                            <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Roll No</th>
                                             <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Student</th>
                                             <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Course</th>
                                             <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Total Amt</th>
@@ -699,7 +699,7 @@ export default function DashboardPage() {
                                             const overdue = r.status === "OVERDUE";
                                             return (
                                                 <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-colors">
-                                                    <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">{r.student.registrationNo}</td>
+                                                    <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">{r.student.rollNo}</td>
                                                     <td className="px-4 py-3">
                                                         <p className="font-semibold text-slate-900 dark:text-slate-100">{r.student.name}</p>
                                                     </td>

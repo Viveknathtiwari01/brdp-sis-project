@@ -69,9 +69,8 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
                 where: { userId: user.userId, isDeleted: false },
                 select: {
                     id: true,
-                    firstName: true,
-                    lastName: true,
-                    registrationNo: true,
+                    fullName: true,
+                    rollNo: true,
                     course: { select: { name: true, code: true } },
                     session: { select: { name: true } },
                 },
@@ -150,8 +149,8 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
                     receiptNumber: p.receiptNumber,
                     paymentMode: p.paymentMode,
                     student: {
-                        name: `${student.firstName} ${student.lastName}`,
-                        registrationNo: student.registrationNo,
+                        name: student.fullName,
+                        rollNo: student.rollNo,
                     },
                     semester: p.feeLedger.semester,
                 })),
@@ -159,8 +158,8 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
                     {
                         id: student.id,
                         student: {
-                            name: `${student.firstName} ${student.lastName}`,
-                            registrationNo: student.registrationNo,
+                            name: student.fullName,
+                            rollNo: student.rollNo,
                             course: student.course,
                         },
                         totalAmount: mySummary.totalAmount,
@@ -215,9 +214,8 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
                     student: {
                         select: {
                             id: true,
-                            firstName: true,
-                            lastName: true,
-                            registrationNo: true,
+                            fullName: true,
+                            rollNo: true,
                             course: { select: { name: true, code: true } },
                             session: { select: { name: true } },
                         },
@@ -240,9 +238,8 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
                     paymentMode: true,
                     student: {
                         select: {
-                            firstName: true,
-                            lastName: true,
-                            registrationNo: true,
+                            fullName: true,
+                            rollNo: true,
                             course: { select: { name: true, code: true } },
                         },
                     },
@@ -291,9 +288,8 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
             {
                 student: {
                     id: string;
-                    firstName: string;
-                    lastName: string;
-                    registrationNo: string;
+                    fullName: string;
+                    rollNo: string;
                     course: { name: string; code: string };
                 };
                 ledgers: Array<{ totalAmount: number; paidAmount: number; dueDate: Date }>;
@@ -473,8 +469,8 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
                 return {
                     id: s.student.id,
                     student: {
-                        name: `${s.student.firstName} ${s.student.lastName}`,
-                        registrationNo: s.student.registrationNo,
+                    name: s.student.fullName,
+                    rollNo: s.student.rollNo,
                         course: s.student.course,
                     },
                     totalAmount: summary.totalAmount,
@@ -547,8 +543,8 @@ export const GET = withPermission("dashboard:view")(async (_req: NextRequest, us
                 receiptNumber: p.receiptNumber,
                 paymentMode: p.paymentMode,
                 student: {
-                    name: `${p.student.firstName} ${p.student.lastName}`,
-                    registrationNo: p.student.registrationNo,
+                    name: p.student.fullName,
+                    rollNo: p.student.rollNo,
                     course: p.student.course,
                 },
                 semester: p.feeLedger.semester,

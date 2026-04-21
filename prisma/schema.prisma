@@ -173,26 +173,10 @@ model Student {
   userId        String     @unique @map("_userId") @db.ObjectId
   courseId      String     @db.ObjectId
   sessionId     String     @db.ObjectId
-  registrationNo String     @unique
   rollNo        String
-  firstName     String
-  lastName      String
+  fullName     String
   fatherName    String
-  motherName    String
-  dateOfBirth   DateTime
-  gender        String
-  phone         String
   address       String
-  city          String
-  state         String
-  pincode       String
-  tenthBoard    String
-  tenthYear     Int
-  tenthPercentage Float
-  twelfthBoard  String
-  twelfthYear   Int
-  twelfthPercentage Float
-  twelfthStream  String
   currentSemester Int       @default(1)
   isActive      Boolean    @default(true)
   isDeleted     Boolean    @default(false)

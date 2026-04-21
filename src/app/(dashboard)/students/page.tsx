@@ -42,10 +42,8 @@ import {
 
 interface StudentData {
     id: string;
-    firstName: string;
-    lastName: string;
-    registrationNo: string;
-    phone: string;
+    fullName: string;
+    rollNo: string;
     currentSemester: number;
     isActive: boolean;
     createdAt: string;
@@ -57,26 +55,11 @@ interface StudentData {
 type StudentDetails = {
     id: string;
     userId: string;
-    firstName: string;
-    lastName: string;
-    registrationNo: string;
+    fullName: string;
     rollNo: string;
     fatherName: string;
-    motherName: string;
-    dateOfBirth: string;
-    gender: string;
     phone: string;
     address: string;
-    city: string;
-    state: string;
-    pincode: string;
-    tenthBoard: string;
-    tenthYear: number;
-    tenthPercentage: number;
-    twelfthBoard: string;
-    twelfthYear: number;
-    twelfthPercentage: number;
-    twelfthStream: string;
     currentSemester: number;
     isActive: boolean;
     createdAt: string;
@@ -128,6 +111,9 @@ export default function StudentsPage() {
         setValue,
         formState: { errors },
     } = useForm<any>({
+        defaultValues: {
+            currentSemester: 1,
+        },
         resolver: zodResolver(studentRegistrationSchema) as any,
     });
 
@@ -231,26 +217,11 @@ export default function StudentsPage() {
         setDetailsSaving(true);
         try {
             const payload = {
-                registrationNo: selectedStudent.registrationNo,
                 rollNo: selectedStudent.rollNo,
-                firstName: selectedStudent.firstName,
-                lastName: selectedStudent.lastName,
+                fullName: selectedStudent.fullName,
                 fatherName: selectedStudent.fatherName,
-                motherName: selectedStudent.motherName,
-                dateOfBirth: selectedStudent.dateOfBirth,
-                gender: selectedStudent.gender,
                 phone: selectedStudent.phone,
                 address: selectedStudent.address,
-                city: selectedStudent.city,
-                state: selectedStudent.state,
-                pincode: selectedStudent.pincode,
-                tenthBoard: selectedStudent.tenthBoard,
-                tenthYear: selectedStudent.tenthYear,
-                tenthPercentage: selectedStudent.tenthPercentage,
-                twelfthBoard: selectedStudent.twelfthBoard,
-                twelfthYear: selectedStudent.twelfthYear,
-                twelfthPercentage: selectedStudent.twelfthPercentage,
-                twelfthStream: selectedStudent.twelfthStream,
                 currentSemester: selectedStudent.currentSemester,
                 courseId: selectedStudent.course?.id,
                 sessionId: selectedStudent.session?.id,
@@ -350,7 +321,7 @@ export default function StudentsPage() {
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
-                                placeholder="Search by name, registration number, or phone..."
+                                placeholder="Search by name or roll no..."
                                 value={search}
                                 onChange={(e) => {
                                     setSearch(e.target.value);
@@ -369,7 +340,7 @@ export default function StudentsPage() {
                             <thead>
                                 <tr className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
                                     <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Student</th>
-                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Reg. No</th>
+                                    <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Roll No</th>
                                     <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Course</th>
                                     <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Session</th>
                                     <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Semester</th>
@@ -397,19 +368,19 @@ export default function StudentsPage() {
                                         >
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-                                                        {student.firstName[0]}{student.lastName[0]}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className="font-medium text-slate-700 dark:text-slate-200 truncate">
-                                                            {student.firstName} {student.lastName}
-                                                        </p>
-                                                        <p className="text-xs text-slate-500 truncate max-w-[260px]">{student.user.email}</p>
-                                                    </div>
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                                    {student.fullName.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-slate-700 dark:text-slate-200 truncate">
+                                                        {student.fullName}
+                                                    </p>
+                                                    <p className="text-xs text-slate-500 truncate max-w-[260px]">{student.user.email}</p>
+                                                </div>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
-                                                {student.registrationNo}
+                                                {student.rollNo}
                                             </td>
                                             <td className="px-4 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
                                                 {student.course.name}
@@ -521,7 +492,7 @@ export default function StudentsPage() {
                         <form onSubmit={handleSubmit(onRegister)} className="space-y-6">
                             {/* Personal Details */}
                             <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
-                                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Personal Details</h3>
+                                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Student Details</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                         <Label required>College</Label>
@@ -537,31 +508,20 @@ export default function StudentsPage() {
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <Label required>Registration Number</Label>
-                                        <Input {...register("registrationNo")} error={errors.registrationNo?.message} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label required>Roll No</Label>
-                                        <Input {...register("rollNo")} error={errors.rollNo?.message} />
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <Label required>First Name</Label>
-                                        <Input {...register("firstName")} error={errors.firstName?.message} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label required>Last Name</Label>
-                                        <Input {...register("lastName")} error={errors.lastName?.message} />
+                                        <Label required>Full Name</Label>
+                                        <Input {...register("fullName")} error={errors.fullName?.message} />
                                     </div>
 
                                     <div className="space-y-1.5">
                                         <Label required>Father&apos;s Name</Label>
                                         <Input {...register("fatherName")} error={errors.fatherName?.message} />
                                     </div>
+
                                     <div className="space-y-1.5">
-                                        <Label required>Mother&apos;s Name</Label>
-                                        <Input {...register("motherName")} error={errors.motherName?.message} />
+                                        <Label required>Roll No</Label>
+                                        <Input {...register("rollNo")} error={errors.rollNo?.message} />
                                     </div>
+
 
                                     <div className="space-y-1.5">
                                         <Label required>Email</Label>
@@ -585,41 +545,6 @@ export default function StudentsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-1.5">
-                                        <Label required>Date of Birth</Label>
-                                        <Input {...register("dateOfBirth")} type="date" error={errors.dateOfBirth?.message} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label required>Gender</Label>
-                                        <Select onValueChange={(v) => setValue("gender", v as "Male" | "Female" | "Other")}>
-                                            <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Male">Male</SelectItem>
-                                                <SelectItem value="Female">Female</SelectItem>
-                                                <SelectItem value="Other">Other</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        {errors.gender && <p className="text-xs text-red-500">{errors.gender.message as string}</p>}
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <Label required>Phone</Label>
-                                        <Input {...register("phone")} error={errors.phone?.message} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label required>City</Label>
-                                        <Input {...register("city")} error={errors.city?.message} />
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <Label required>State</Label>
-                                        <Input {...register("state")} error={errors.state?.message} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label required>Pincode</Label>
-                                        <Input {...register("pincode")} error={errors.pincode?.message} />
-                                    </div>
-
                                     <div className="space-y-1.5 md:col-span-2">
                                         <Label required>Address</Label>
                                         <textarea
@@ -632,40 +557,6 @@ export default function StudentsPage() {
                                 </div>
                             </div>
 
-                            {/* Educational Details */}
-                            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
-                                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Educational Details</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="space-y-1.5">
-                                        <Label required>10th Board</Label>
-                                        <Input {...register("tenthBoard")} error={errors.tenthBoard?.message} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label required>10th Year</Label>
-                                        <Input {...register("tenthYear")} type="number" error={errors.tenthYear?.message} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label required>10th Percentage</Label>
-                                        <Input {...register("tenthPercentage")} type="number" step="0.01" error={errors.tenthPercentage?.message} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label required>12th Board</Label>
-                                        <Input {...register("twelfthBoard")} error={errors.twelfthBoard?.message} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label required>12th Year</Label>
-                                        <Input {...register("twelfthYear")} type="number" error={errors.twelfthYear?.message} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label required>12th Percentage</Label>
-                                        <Input {...register("twelfthPercentage")} type="number" step="0.01" error={errors.twelfthPercentage?.message} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label required>12th Stream</Label>
-                                        <Input {...register("twelfthStream")} error={errors.twelfthStream?.message} />
-                                    </div>
-                                </div>
-                            </div>
 
                             {/* Academic Details */}
                             <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
@@ -684,16 +575,6 @@ export default function StudentsPage() {
                                         {errors.courseId && <p className="text-xs text-red-500">{errors.courseId.message as string}</p>}
                                     </div>
 
-                                    <div className="space-y-1.5">
-                                        <Label required>Semester</Label>
-                                        <Input
-                                            {...register("currentSemester")}
-                                            type="number"
-                                            min={1}
-                                            placeholder="1"
-                                            error={errors.currentSemester?.message}
-                                        />
-                                    </div>
                                     <div className="space-y-1.5">
                                         <Label required>Session</Label>
                                         <Select onValueChange={(v) => setValue("sessionId", v)}>
@@ -779,16 +660,8 @@ export default function StudentsPage() {
                         ) : (
                             <div className="space-y-6">
                                 <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
-                                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Personal Details</h3>
+                                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Student Details</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <Label required>Registration Number</Label>
-                                            <Input
-                                                value={selectedStudent.registrationNo || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, registrationNo: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
                                         <div className="space-y-1.5">
                                             <Label required>Roll No</Label>
                                             <Input
@@ -798,24 +671,12 @@ export default function StudentsPage() {
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label required>First Name</Label>
+                                            <Label required>Full Name</Label>
                                             <Input
-                                                value={selectedStudent.firstName || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, firstName: e.target.value })}
+                                                value={selectedStudent.fullName || ""}
+                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, fullName: e.target.value })}
                                                 disabled={detailsMode === "view"}
                                             />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>Last Name</Label>
-                                            <Input
-                                                value={selectedStudent.lastName || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, lastName: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>Email</Label>
-                                            <Input value={selectedStudent.user?.email || ""} disabled />
                                         </div>
                                         <div className="space-y-1.5">
                                             <Label required>Father&apos;s Name</Label>
@@ -826,177 +687,6 @@ export default function StudentsPage() {
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label required>Mother&apos;s Name</Label>
-                                            <Input
-                                                value={selectedStudent.motherName || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, motherName: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>Date of Birth</Label>
-                                            <Input
-                                                type="date"
-                                                value={selectedStudent.dateOfBirth ? selectedStudent.dateOfBirth.slice(0, 10) : ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, dateOfBirth: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>Gender</Label>
-                                            <Select
-                                                value={selectedStudent.gender || ""}
-                                                onValueChange={(v) => setSelectedStudent({ ...selectedStudent, gender: v })}
-                                                disabled={detailsMode === "view"}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select gender" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Male">Male</SelectItem>
-                                                    <SelectItem value="Female">Female</SelectItem>
-                                                    <SelectItem value="Other">Other</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>Phone</Label>
-                                            <Input
-                                                value={selectedStudent.phone || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, phone: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>City</Label>
-                                            <Input
-                                                value={selectedStudent.city || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, city: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>State</Label>
-                                            <Input
-                                                value={selectedStudent.state || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, state: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>Pincode</Label>
-                                            <Input
-                                                value={selectedStudent.pincode || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, pincode: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5 md:col-span-2">
-                                            <Label required>Address</Label>
-                                            <textarea
-                                                value={selectedStudent.address || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, address: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                                rows={2}
-                                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-100 dark:placeholder:text-slate-500"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
-                                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Educational Details</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="space-y-1.5">
-                                            <Label required>10th Board</Label>
-                                            <Input
-                                                value={selectedStudent.tenthBoard || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, tenthBoard: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>10th Year</Label>
-                                            <Input
-                                                type="number"
-                                                value={selectedStudent.tenthYear ?? ""}
-                                                onChange={(e) =>
-                                                    setSelectedStudent({
-                                                        ...selectedStudent,
-                                                        tenthYear: e.target.value ? Number(e.target.value) : ("" as unknown as number),
-                                                    })
-                                                }
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>10th Percentage</Label>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                value={selectedStudent.tenthPercentage ?? ""}
-                                                onChange={(e) =>
-                                                    setSelectedStudent({
-                                                        ...selectedStudent,
-                                                        tenthPercentage: e.target.value ? Number(e.target.value) : ("" as unknown as number),
-                                                    })
-                                                }
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <Label required>12th Board</Label>
-                                            <Input
-                                                value={selectedStudent.twelfthBoard || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, twelfthBoard: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>12th Year</Label>
-                                            <Input
-                                                type="number"
-                                                value={selectedStudent.twelfthYear ?? ""}
-                                                onChange={(e) =>
-                                                    setSelectedStudent({
-                                                        ...selectedStudent,
-                                                        twelfthYear: e.target.value ? Number(e.target.value) : ("" as unknown as number),
-                                                    })
-                                                }
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label required>12th Percentage</Label>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                value={selectedStudent.twelfthPercentage ?? ""}
-                                                onChange={(e) =>
-                                                    setSelectedStudent({
-                                                        ...selectedStudent,
-                                                        twelfthPercentage: e.target.value ? Number(e.target.value) : ("" as unknown as number),
-                                                    })
-                                                }
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5 md:col-span-3">
-                                            <Label required>12th Stream</Label>
-                                            <Input
-                                                value={selectedStudent.twelfthStream || ""}
-                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, twelfthStream: e.target.value })}
-                                                disabled={detailsMode === "view"}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
-                                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Academic Details</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
                                             <Label required>Course</Label>
                                             <Select
                                                 value={selectedStudent.course?.id || ""}
@@ -1006,14 +696,10 @@ export default function StudentsPage() {
                                                 }}
                                                 disabled={detailsMode === "view"}
                                             >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select course" />
-                                                </SelectTrigger>
+                                                <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
                                                 <SelectContent>
                                                     {courses.map((c) => (
-                                                        <SelectItem key={c.id} value={c.id}>
-                                                            {c.name} ({c.code})
-                                                        </SelectItem>
+                                                        <SelectItem key={c.id} value={c.id}>{c.name} ({c.code})</SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
@@ -1028,14 +714,10 @@ export default function StudentsPage() {
                                                 }}
                                                 disabled={detailsMode === "view"}
                                             >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select session" />
-                                                </SelectTrigger>
+                                                <SelectTrigger><SelectValue placeholder="Select session" /></SelectTrigger>
                                                 <SelectContent>
                                                     {sessions.map((s) => (
-                                                        <SelectItem key={s.id} value={s.id}>
-                                                            {s.name}
-                                                        </SelectItem>
+                                                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
@@ -1052,6 +734,16 @@ export default function StudentsPage() {
                                                     })
                                                 }
                                                 disabled={detailsMode === "view"}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5 md:col-span-2">
+                                            <Label required>Address</Label>
+                                            <textarea
+                                                value={selectedStudent.address || ""}
+                                                onChange={(e) => setSelectedStudent({ ...selectedStudent, address: e.target.value })}
+                                                disabled={detailsMode === "view"}
+                                                rows={2}
+                                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-100 dark:placeholder:text-slate-500"
                                             />
                                         </div>
                                     </div>

@@ -34,10 +34,6 @@ export function generateReceiptNumber(): string {
     return `${prefix}-${timestamp}-${random}`;
 }
 
-export function generateRegistrationNo(courseCode: string, year: number, count: number): string {
-    const paddedCount = count.toString().padStart(4, "0");
-    return `${courseCode}/${year}/${paddedCount}`;
-}
 
 export function getInitials(name: string): string {
     const parts = name.trim().split(/\s+/);

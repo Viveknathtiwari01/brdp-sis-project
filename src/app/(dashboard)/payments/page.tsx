@@ -21,9 +21,8 @@ interface PaymentData {
     transactionId: string | null;
     paidAt: string;
     student: {
-        firstName: string;
-        lastName: string;
-        registrationNo: string;
+        fullName: string;
+        rollNo: string;
     };
     feeLedger: {
         semester: number;
@@ -149,9 +148,9 @@ export default function PaymentsPage() {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <p className="font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap">
-                                                    {payment.student.firstName} {payment.student.lastName}
+                                                    {payment.student.fullName}
                                                 </p>
-                                                <p className="text-xs text-slate-500 whitespace-nowrap">{payment.student.registrationNo}</p>
+                                                <p className="text-xs text-slate-500 whitespace-nowrap">{payment.student.rollNo}</p>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <Badge variant="default">Sem {payment.feeLedger.semester}</Badge>

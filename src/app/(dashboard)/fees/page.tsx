@@ -32,9 +32,8 @@ interface LedgerEntry {
     dueDate: string;
     status: "PENDING" | "PARTIAL" | "PAID";
     student: {
-        firstName: string;
-        lastName: string;
-        registrationNo: string;
+        fullName: string;
+        rollNo: string;
         course: { name: string; code: string };
         session: { name: string };
     };
@@ -49,13 +48,12 @@ interface LedgerEntry {
 
 interface StudentOption {
     id: string;
-    firstName: string;
-    lastName: string;
-    registrationNo: string;
+    fullName: string;
+    rollNo: string;
 }
 
 export default function FeesPage() {
-    const { hasPermission, user } = useAuth();
+    const { hasPermission, user, accessToken } = useAuth();
     const { apiFetch } = useApi();
     const [ledger, setLedger] = useState<LedgerEntry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -130,6 +128,37 @@ export default function FeesPage() {
         }
     }, [user, apiFetch]);
 
+    const downloadReceipt = async (paymentId: string) => {
+        try {
+            const res = await fetch(`/api/payments/${paymentId}/receipt`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+            if (!res.ok) throw new Error("Failed to fetch receipt");
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            
+            // Auto-save (Download)
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `receipt_${paymentId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            // Open print dialog
+            const printWindow = window.open(url);
+            if (printWindow) {
+                printWindow.onload = () => {
+                    printWindow.print();
+                };
+            }
+        } catch {
+            toast.error("Failed to auto-download receipt. You can download it manually from the history.");
+        }
+    };
+
     const openPaymentDialog = (entry: LedgerEntry) => {
         setSelectedLedger(entry);
         setPaymentAmount("");
@@ -162,6 +191,19 @@ export default function FeesPage() {
             if (res.success) {
                 toast.success("Payment processed successfully!");
                 setShowPayment(false);
+                
+                // Trigger auto-download and print if we have the payment ID
+                const paymentRes = await apiFetch<{ success: boolean; data: any }>(`/api/fee-ledger?studentId=${selectedStudentId}`);
+                if (paymentRes.success) {
+                    const latestPayment = paymentRes.data
+                        .flatMap((l: any) => l.payments)
+                        .sort((a: any, b: any) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime())[0];
+                    
+                    if (latestPayment) {
+                        downloadReceipt(latestPayment.id);
+                    }
+                }
+
                 if (selectedStudentId) fetchLedger(selectedStudentId);
             } else {
                 toast.error(res.message || "Payment failed");
@@ -181,9 +223,8 @@ export default function FeesPage() {
 
     const filteredStudents = students.filter(
         (s) =>
-            s.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            s.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            s.registrationNo.toLowerCase().includes(searchTerm.toLowerCase())
+            s.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            s.rollNo.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -217,7 +258,7 @@ export default function FeesPage() {
                                             </div>
                                             {filteredStudents.map((s) => (
                                                 <SelectItem key={s.id} value={s.id}>
-                                                    {s.firstName} {s.lastName} ({s.registrationNo})
+                                                    {s.fullName} ({s.rollNo})
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

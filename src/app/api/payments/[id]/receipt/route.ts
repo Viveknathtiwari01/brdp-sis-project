@@ -63,12 +63,14 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const college = COLLEGE_CONFIG[collegeCode as keyof typeof COLLEGE_CONFIG] || COLLEGE_CONFIG.BRDP;
 
         const instituteName = college.name;
-        const instituteAddress = [
-            "Village Mohiuddinpur Sahroi, Post: Sitapur,",
-            "Block: Ailiya, District: Sitapur, Uttar Pradesh - 261001",
-        ];
+        // Split address into lines if it's too long, or use as is
+        const instituteAddress = college.address.split(", ").reduce((acc: string[], curr: string, i: number) => {
+            if (i % 2 === 0) acc.push(curr);
+            else acc[acc.length - 1] += ", " + curr;
+            return acc;
+        }, []);
 
-        const studentName = `${payment.student.firstName} ${payment.student.lastName}`;
+        const studentName = payment.student.fullName;
         const courseName = payment.student.course?.name || "";
         const sessionName = payment.student.session?.name || "";
 
@@ -186,7 +188,7 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             tableLineWidth: 0.8,
             body: [
                 ["Receipt No:", payment.receiptNumber, "Date:", formatDate(paidAt)],
-                ["Student:", studentName, "Reg. No:", payment.student.registrationNo],
+                ["Student:", studentName, "Roll No:", payment.student.rollNo],
                 ["Course:", courseName, "Session:", sessionName || "-"],
                 ["Semester:", String(payment.feeLedger.semester), "Mode:", payment.paymentMode],
             ],
@@ -347,7 +349,7 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const pdfArrayBuffer = doc.output("arraybuffer");
         const pdfBuffer = Buffer.from(pdfArrayBuffer);
 
-        const studentFileName = sanitizeFileName(`${payment.student.firstName || "Student"}_${payment.student.lastName || ""}`);
+        const studentFileName = sanitizeFileName(payment.student.fullName || "Student");
         const dateName = formatDateCompact(paidAt).replaceAll("-", "_");
         const fileName = sanitizeFileName(`${studentFileName}_${dateName}.pdf`);
 

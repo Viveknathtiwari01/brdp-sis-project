@@ -28,9 +28,8 @@ export const GET = withPermission("fee_ledger:view")(async (req, user) => {
                 },
                 student: {
                     select: {
-                        firstName: true,
-                        lastName: true,
-                        registrationNo: true,
+                        fullName: true,
+                        rollNo: true,
                         course: { select: { name: true, code: true } },
                         session: { select: { name: true } },
                     },
