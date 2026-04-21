@@ -350,8 +350,9 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const pdfBuffer = Buffer.from(pdfArrayBuffer);
 
         const studentFileName = sanitizeFileName(payment.student.fullName || "Student");
+        const rollNo = sanitizeFileName(payment.student.rollNo || "NoRoll");
         const dateName = formatDateCompact(paidAt).replaceAll("-", "_");
-        const fileName = sanitizeFileName(`${studentFileName}_${dateName}.pdf`);
+        const fileName = sanitizeFileName(`${studentFileName}_${rollNo}_${dateName}.pdf`);
 
         return new NextResponse(pdfBuffer, {
             status: 200,
