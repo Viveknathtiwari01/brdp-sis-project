@@ -1,8 +1,9 @@
 import { hashPassword } from "@/lib/auth/password";
 import type { StudentRegistrationInput } from "@/lib/validators/student";
+import prisma from "@/lib/prisma/client";
 
 export class StudentService {
-    private static async nextReceiptNumber(tx: typeof prisma, paidAt: Date) {
+    private static async nextReceiptNumber(tx: any, paidAt: Date) {
         const year = paidAt.getFullYear();
         const counter = await (tx as any).receiptCounter.upsert({
             where: { year },
