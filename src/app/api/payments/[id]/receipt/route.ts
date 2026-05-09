@@ -78,7 +78,7 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const paidAmount = Number(payment.amount) || 0;
         const remaining = Math.max(0, totalAmount - Number(payment.feeLedger.paidAmount));
 
-        const doc = new jsPDF({ unit: "pt", format: "a4" });
+        const doc = new jsPDF({ unit: "pt", format: [595.28, 1100] });
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         const outerMargin = 28;
@@ -132,7 +132,7 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         }
 
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(20);
+        doc.setFontSize(24);
         doc.setTextColor(...colors.darkBlue);
         // Split college name properly for two lines
         const nameParts = instituteName.split(" ");
@@ -140,34 +140,34 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const secondLine = nameParts.slice(4).join(" "); // Remaining words
         
         doc.text(firstLine, headerCenterX, headerY + 4, { align: "center" });
-        doc.text(secondLine, headerCenterX, headerY + 22, { align: "center" });
+        doc.text(secondLine, headerCenterX, headerY + 30, { align: "center" });
 
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
+        doc.setFontSize(15);
         doc.setTextColor(...colors.slate900);
-        doc.text("Fee Receipt", headerCenterX, headerY + 40, { align: "center" });
+        doc.text("Fee Receipt", headerCenterX, headerY + 56, { align: "center" });
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(13);
+        doc.setFontSize(15);
         doc.setTextColor(...colors.blue);
         instituteAddress.forEach((line, i) => {
-            doc.text(line, headerCenterX, headerY + 58 + i * 13, { align: "center" });
+            doc.text(line, headerCenterX, headerY + 80 + i * 16, { align: "center" });
         });
 
         doc.setDrawColor(...colors.grid);
         doc.setLineWidth(1);
-        const headerDividerY = headerY + 58 + instituteAddress.length * 13 + 10;
+        const headerDividerY = headerY + 80 + instituteAddress.length * 16 + 12;
         doc.line(contentLeft, headerDividerY, pageWidth - contentRight, headerDividerY);
 
         const sectionTitle = (title: string, y: number) => {
             doc.setFillColor(239, 246, 255);
             doc.setDrawColor(...colors.grid);
             doc.setLineWidth(0.8);
-            doc.rect(contentLeft, y - 14, contentWidth, 20, "FD");
+            doc.rect(contentLeft, y - 16, contentWidth, 24, "FD");
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(12);
+            doc.setFontSize(14);
             doc.setTextColor(...colors.slate900);
-            doc.text(title, contentLeft + 8, y);
+            doc.text(title, contentLeft + 8, y + 2);
         };
 
         const firstSectionY = headerDividerY + 30;
@@ -178,9 +178,9 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             theme: "grid",
             styles: {
                 font: "helvetica",
-                fontSize: 11,
+                fontSize: 14,
                 textColor: colors.slate900,
-                cellPadding: 7,
+                cellPadding: 9,
                 lineColor: colors.grid,
                 lineWidth: 0.8,
             },
@@ -217,9 +217,9 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             theme: "grid",
             styles: {
                 font: "helvetica",
-                fontSize: 11,
+                fontSize: 14,
                 textColor: colors.slate900,
-                cellPadding: 7,
+                cellPadding: 9,
                 lineColor: colors.grid,
                 lineWidth: 0.8,
             },
@@ -288,11 +288,11 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             theme: "grid",
             styles: {
                 font: "helvetica",
-                fontSize: 11,
+                fontSize: 14,
                 textColor: colors.slate900,
-                cellPadding: 7,
+                cellPadding: 9,
                 lineColor: colors.grid,
-                lineWidth: 0.8,
+                lineWidth: 0.8
             },
             headStyles: { fillColor: colors.headFill, textColor: colors.slate900, fontStyle: "bold" },
             tableLineColor: colors.grid,
@@ -303,7 +303,7 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
                 0: { cellWidth: contentWidth * 0.28 },
                 1: { cellWidth: contentWidth * 0.24 },
                 2: { cellWidth: contentWidth * 0.28 },
-                3: { cellWidth: contentWidth * 0.20, halign: "right" },
+                3: { cellWidth: contentWidth * 0.20, halign: "right" }
             },
             didParseCell: (data) => {
                 if (data.section === "body" && data.row.index === paymentSummaryRows.length - 1) {
@@ -311,40 +311,36 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
                     data.cell.styles.fillColor = [248, 250, 252];
                 }
             },
-            margin: { left: contentLeft, right: contentRight },
+            margin: { left: contentLeft, right: contentRight }
         });
 
-        const afterSummaryY = (doc as any).lastAutoTable.finalY + 26;
+        const afterSummaryY = (doc as any).lastAutoTable.finalY + 40;
+        
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
+        doc.setFontSize(14);
         doc.setTextColor(...colors.slate900);
         doc.text("Authorized Signature", contentLeft, afterSummaryY);
-        doc.text("Fee Clerk", contentLeft, afterSummaryY + 14);
+        doc.text("Fee Clerk", contentLeft, afterSummaryY + 20);
 
         doc.setFont("helvetica", "bold");
         doc.setTextColor(185, 28, 28);
-        doc.text(`Due Date: ${formatDate(dueDate)}`, pageWidth - contentRight, afterSummaryY + 8, { align: "right" });
+        doc.text(`Due Date: ${formatDate(dueDate)}`, pageWidth - contentRight, afterSummaryY + 10, { align: "right" });
 
-        const footerGap = 14;
-        const footerY = pageHeight - outerMargin - qrSize - 24;
-        doc.addImage(qrDataUrl, "PNG", qrX, footerY, qrSize, qrSize);
+        const noteText = "Note: This is a computer-generated receipt and does not require a physical seal unless requested.";
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.5);
-        doc.setTextColor(...colors.slate600);
-        // doc.text("Scan to Apply", qrX + qrSize / 2, footerY + qrSize + 12, { align: "center" });
-
-        const noteY = Math.min(afterSummaryY + 28, footerY - footerGap - 52);
+        doc.setFontSize(12);
+        const splitNote = doc.splitTextToSize(noteText, contentWidth - 40);
+        const noteHeight = splitNote.length * 18 + 24;
+        const noteY = afterSummaryY + 55;
+        
         doc.setDrawColor(...colors.grid);
         doc.setFillColor(241, 245, 249);
-        doc.rect(contentLeft, noteY, contentWidth, 52, "FD");
-        doc.setFont("helvetica", "normal");
+        doc.rect(contentLeft, noteY, contentWidth, noteHeight, "FD");
         doc.setTextColor(51, 65, 85);
-        doc.setFontSize(10);
-        doc.text(
-            "Note: This is a computer-generated receipt and does not require a physical seal unless requested.",
-            contentLeft + 10,
-            noteY + 22
-        );
+        doc.text(splitNote, contentLeft + 10, noteY + 24);
+
+        const footerY = Math.min(noteY + noteHeight + 40, pageHeight - outerMargin - qrSize - 35);
+        doc.addImage(qrDataUrl, "PNG", qrX, footerY, qrSize, qrSize);
 
         const pdfArrayBuffer = doc.output("arraybuffer");
         const pdfBuffer = Buffer.from(pdfArrayBuffer);
@@ -359,8 +355,8 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             headers: {
                 "Content-Type": "application/pdf",
                 "Content-Disposition": `attachment; filename=\"${fileName}\"`,
-                "Cache-Control": "no-store",
-            },
+                "Cache-Control": "no-store"
+            }
         });
     } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to generate receipt";
