@@ -78,11 +78,11 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const paidAmount = Number(payment.amount) || 0;
         const remaining = Math.max(0, totalAmount - Number(payment.feeLedger.paidAmount));
 
-        const doc = new jsPDF({ unit: "pt", format: [595.28, 1100] });
+        const doc = new jsPDF({ unit: "pt", format: [680, 860] });
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
-        const outerMargin = 28;
-        const contentPaddingX = 22;
+        const outerMargin = 24;
+        const contentPaddingX = 16;
         const contentLeft = outerMargin + contentPaddingX;
         const contentRight = outerMargin + contentPaddingX;
         const contentWidth = pageWidth - contentLeft - contentRight;
@@ -97,14 +97,10 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             headFill: [241, 245, 249] as [number, number, number],
         };
 
-        doc.setDrawColor(...colors.border);
-        doc.setLineWidth(1);
-        doc.rect(outerMargin, outerMargin, pageWidth - outerMargin * 2, pageHeight - outerMargin * 2);
-
-        const headerY = outerMargin + 24;
+        const headerY = outerMargin + 32;
         // const qrUrl = "http://brdpdcsitapur.com/admissions/apply/";
         const qrUrl = "Fee Receipt - No Redirect";
-        const qrSize = 74;
+        const qrSize = 72;
         const qrX = pageWidth - contentRight - qrSize;
 
         const logoPath = path.join(process.cwd(), "public", college.logoPath.replace(/^\//, ""));
@@ -114,7 +110,7 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             : null;
         const logoSize = 56;
         const logoX = contentLeft;
-        const logoY = headerY - 16;
+        const logoY = headerY - 12;
 
         const headerLeft = contentLeft + (logoDataUrl ? logoSize + 14 : 0);
         const headerRight = pageWidth - contentRight;
@@ -140,23 +136,23 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const secondLine = nameParts.slice(4).join(" "); // Remaining words
         
         doc.text(firstLine, headerCenterX, headerY + 4, { align: "center" });
-        doc.text(secondLine, headerCenterX, headerY + 30, { align: "center" });
+        doc.text(secondLine, headerCenterX, headerY + 26, { align: "center" });
 
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(15);
+        doc.setFontSize(16);
         doc.setTextColor(...colors.slate900);
-        doc.text("Fee Receipt", headerCenterX, headerY + 56, { align: "center" });
+        doc.text("Fee Receipt", headerCenterX, headerY + 50, { align: "center" });
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(15);
+        doc.setFontSize(14);
         doc.setTextColor(...colors.blue);
         instituteAddress.forEach((line, i) => {
-            doc.text(line, headerCenterX, headerY + 80 + i * 16, { align: "center" });
+            doc.text(line, headerCenterX, headerY + 70 + i * 16, { align: "center" });
         });
 
         doc.setDrawColor(...colors.grid);
         doc.setLineWidth(1);
-        const headerDividerY = headerY + 80 + instituteAddress.length * 16 + 12;
+        const headerDividerY = headerY + 70 + instituteAddress.length * 16 + 10;
         doc.line(contentLeft, headerDividerY, pageWidth - contentRight, headerDividerY);
 
         const sectionTitle = (title: string, y: number) => {
@@ -165,12 +161,12 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             doc.setLineWidth(0.8);
             doc.rect(contentLeft, y - 16, contentWidth, 24, "FD");
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(14);
+            doc.setFontSize(15);
             doc.setTextColor(...colors.slate900);
-            doc.text(title, contentLeft + 8, y + 2);
+            doc.text(title, contentLeft + 10, y + 2);
         };
 
-        const firstSectionY = headerDividerY + 30;
+        const firstSectionY = headerDividerY + 22;
         sectionTitle("Student & Receipt Details", firstSectionY);
 
         autoTable(doc, {
@@ -178,9 +174,9 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             theme: "grid",
             styles: {
                 font: "helvetica",
-                fontSize: 14,
+                fontSize: 15,
                 textColor: colors.slate900,
-                cellPadding: 9,
+                cellPadding: 5,
                 lineColor: colors.grid,
                 lineWidth: 0.8,
             },
@@ -209,17 +205,17 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             margin: { left: contentLeft, right: contentRight },
         });
 
-        const afterDetailsY = (doc as any).lastAutoTable.finalY + 32;
+        const afterDetailsY = (doc as any).lastAutoTable.finalY + 24;
         sectionTitle("Fee Breakdown", afterDetailsY);
 
         autoTable(doc, {
-            startY: afterDetailsY + 10,
+            startY: afterDetailsY + 12,
             theme: "grid",
             styles: {
                 font: "helvetica",
-                fontSize: 14,
+                fontSize: 15,
                 textColor: colors.slate900,
-                cellPadding: 9,
+                cellPadding: 5,
                 lineColor: colors.grid,
                 lineWidth: 0.8,
             },
@@ -247,7 +243,7 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             margin: { left: contentLeft, right: contentRight },
         });
 
-        const afterBreakdownY = (doc as any).lastAutoTable.finalY + 32;
+        const afterBreakdownY = (doc as any).lastAutoTable.finalY + 24;
 
         const allLedgers = await prisma.feeLedger.findMany({
             where: { studentId: payment.studentId },
@@ -288,9 +284,9 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             theme: "grid",
             styles: {
                 font: "helvetica",
-                fontSize: 14,
+                fontSize: 15,
                 textColor: colors.slate900,
-                cellPadding: 9,
+                cellPadding: 5,
                 lineColor: colors.grid,
                 lineWidth: 0.8
             },
@@ -314,10 +310,10 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
             margin: { left: contentLeft, right: contentRight }
         });
 
-        const afterSummaryY = (doc as any).lastAutoTable.finalY + 40;
+        const afterSummaryY = (doc as any).lastAutoTable.finalY + 34;
         
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
+        doc.setFontSize(15);
         doc.setTextColor(...colors.slate900);
         doc.text("Authorized Signature", contentLeft, afterSummaryY);
         doc.text("Fee Clerk", contentLeft, afterSummaryY + 20);
@@ -329,18 +325,27 @@ export const GET = withPermission("payment:view")(async (req, user, context) => 
         const noteText = "Note: This is a computer-generated receipt and does not require a physical seal unless requested.";
         doc.setFont("helvetica", "normal");
         doc.setFontSize(12);
-        const splitNote = doc.splitTextToSize(noteText, contentWidth - 40);
-        const noteHeight = splitNote.length * 18 + 24;
-        const noteY = afterSummaryY + 55;
+        const noteBoxWidth = contentWidth - qrSize - 24;
+        const splitNote = doc.splitTextToSize(noteText, noteBoxWidth - 20);
+        const noteHeight = splitNote.length * 14 + 16;
+        const noteY = afterSummaryY + 40;
         
         doc.setDrawColor(...colors.grid);
         doc.setFillColor(241, 245, 249);
-        doc.rect(contentLeft, noteY, contentWidth, noteHeight, "FD");
+        doc.rect(contentLeft, noteY, noteBoxWidth, noteHeight, "FD");
         doc.setTextColor(51, 65, 85);
-        doc.text(splitNote, contentLeft + 10, noteY + 24);
+        doc.text(splitNote, contentLeft + 12, noteY + 18);
 
-        const footerY = Math.min(noteY + noteHeight + 40, pageHeight - outerMargin - qrSize - 35);
+        const footerY = noteY;
         doc.addImage(qrDataUrl, "PNG", qrX, footerY, qrSize, qrSize);
+
+        // Draw outer border dynamically based on total content height to ensure everything is enclosed
+        const finalContentY = Math.max(noteY + noteHeight, footerY + qrSize);
+        const dynamicPageHeight = Math.max(pageHeight, finalContentY + outerMargin);
+        
+        doc.setDrawColor(...colors.border);
+        doc.setLineWidth(1);
+        doc.rect(outerMargin, outerMargin, pageWidth - outerMargin * 2, dynamicPageHeight - outerMargin * 2);
 
         const pdfArrayBuffer = doc.output("arraybuffer");
         const pdfBuffer = Buffer.from(pdfArrayBuffer);
